@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piano Hero — MVP Jogável</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0f10;
+      --cream: #f2eee5;
+      --gold: #f2ad3b;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #080909;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    #game-shell {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #0a0b0c;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      outline: none;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    #top-actions {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 180ms ease;
+      pointer-events: none;
+    }
+
+    #game-shell:hover #top-actions,
+    #top-actions:focus-within {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .icon-btn {
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(12,14,15,.72);
+      color: #fff;
+      min-width: 38px;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .icon-btn:hover { background: rgba(28,31,33,.9); }
+
+    #sr-status {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <main id="game-shell" aria-label="Piano Hero, jogo de ritmo musical">
+    <canvas id="game" tabindex="0" aria-describedby="sr-status"></canvas>
+    <div id="top-actions">
+      <button class="icon-btn" id="pauseBtn" type="button" title="Pausar ou continuar">P</button>
+      <button class="icon-btn" id="muteBtn" type="button" title="Ativar ou desativar áudio">ÁUDIO</button>
+      <button class="icon-btn" id="fullscreenBtn" type="button" title="Tela cheia">⛶</button>
+    </div>
+    <div id="sr-status" aria-live="polite">Pressione Enter para iniciar.</div>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const shell = document.getElementById('game-shell');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const muteBtn = document.getElementById('muteBtn');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const srStatus = document.getElementById('sr-status');
+
+      const DESIGN_W = 1600;
+      const DESIGN_H = 900;
+      const TWO_PI = Math.PI * 2;
+      const SONG_DURATION = 48;
+      const BPM = 120;
+      const BEAT = 60 / BPM;
+      const APPROACH_TIME = 2.9;
+      const WINDOWS = { perfect: 0.055, great: 0.095, good: 0.145, miss: 0.17 };
+
+      const MODES = [
+        {
+          id: 'normal',
+          name: 'NORMAL',
+          subtitle: '4 TECLAS',
+          keys: ['D', 'F', 'J', 'K'],
+          minAccuracy: 0.62,
+          density: 0.77,
+          label: 'Ideal para começar'
+        },
+        {
+          id: 'hard',
+          name: 'HARD',
+          subtitle: '8 TECLAS',
+          keys: ['A', 'S', 'D', 'F', 'J', 'K', 'L', ';'],
+          minAccuracy: 0.72,
+          density: 1,
+          label: 'Experiência completa'
+        }
+      ];
+
+      const lanePalette = [
+        { main: '#2b99c9', light: '#67c9ef', dark: '#15516d' },
+        { main: '#2787b2', light: '#5db8dd', dark: '#144a62' },
+        { main: '#1f718f', light: '#55a9c5', dark: '#113d4f' },
+        { main: '#e6a32f', light: '#ffc65a', dark: '#805510' },
+        { main: '#7650a1', light: '#a47bd2', dark: '#41275d' },
+        { main: '#8552b2', light: '#b27ee2', dark: '#4b286b' },
+        { main: '#714795', light: '#9d71c4', dark: '#3e2552' },
+        { main: '#55545b', light: '#8b8992', dark: '#2e2d31' }
+      ];
+
+      function readHighScore() {
+        try { return Number(localStorage.getItem('pianoHeroHighScore') || 0); }
+        catch (_) { return 0; }
+      }
+
+      function saveHighScore(value) {
+        try { localStorage.setItem('pianoHeroHighScore', String(value)); }
+        catch (_) {}
+      }
+
+      const state = {
+        screen: 'menu',
+        modeIndex: 1,
+        chart: [],
+        particles: [],
+        floatingTexts: [],
+        keysDown: new Set(),
+        activeKeyFlash: new Map(),
+        score: 0,
+        combo: 0,
+        maxCombo: 0,
+        accuracyPoints: 0,
+        judgedNotes: 0,
+        counts: { perfect: 0, great: 0, good: 0, miss: 0 },
+        performance: 80,
+        fever: 0,
+        feverActive: false,
+        feverEndsAt: 0,
+        feverDuration: 8,
+        songStart: 0,
+        pausedAt: 0,
+        totalPaused: 0,
+        lastFrame: performance.now(),
+        lastBeat: -1,
+        countdown: 3,
+        feedback: '',
+        feedbackSub: '',
+        feedbackAt: 0,
+        shake: 0,
+        pulse: 0,
+        muted: false,
+        audioReady: false,
+        audioCtx: null,
+        masterGain: null,
+        resultRank: '—',
+        resultWon: false,
+        highScore: readHighScore(),
+        hoverTarget: null,
+        mouse: { x: 0, y: 0 }
+      };
+
+      function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+      function lerp(a, b, t) { return a + (b - a) * t; }
+      function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+      function easeInQuad(t) { return t * t; }
+      function formatScore(value) { return Math.max(0, Math.floor(value)).toLocaleString('en-US'); }
+      function nowSec() { return performance.now() / 1000; }
+
+      function seededRandom(seed) {
+        let x = seed >>> 0;
+        return () => {
+          x += 0x6D2B79F5;
+          let t = x;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      function roundRectPath(c, x, y, w, h, r) {
+        const rr = Math.min(r, w / 2, h / 2);
+        c.beginPath();
+        c.moveTo(x + rr, y);
+        c.arcTo(x + w, y, x + w, y + h, rr);
+        c.arcTo(x + w, y + h, x, y + h, rr);
+        c.arcTo(x, y + h, x, y, rr);
+        c.arcTo(x, y, x + w, y, rr);
+        c.closePath();
+      }
+
+      function fillRoundRect(x, y, w, h, r, fill) {
+        roundRectPath(ctx, x, y, w, h, r);
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+
+      function strokeRoundRect(x, y, w, h, r, stroke, lineWidth = 1) {
+        roundRectPath(ctx, x, y, w, h, r);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+      }
+
+      function fitCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        state.viewW = rect.width;
+        state.viewH = rect.height;
+        state.scale = Math.min(rect.width / DESIGN_W, rect.height / DESIGN_H);
+        state.offsetX = (rect.width - DESIGN_W * state.scale) / 2;
+        state.offsetY = (rect.height - DESIGN_H * state.scale) / 2;
+      }
+
+      function toDesign(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (clientX - rect.left - state.offsetX) / state.scale,
+          y: (clientY - rect.top - state.offsetY) / state.scale
+        };
+      }
+
+      function beginScene() {
+        ctx.save();
+        ctx.translate(state.offsetX, state.offsetY);
+        ctx.scale(state.scale, state.scale);
+      }
+
+      function endScene() { ctx.restore(); }
+
+      function setupAudio() {
+        if (state.audioReady) {
+          if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume();
+          return;
+        }
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        state.audioCtx = new AC();
+        state.masterGain = state.audioCtx.createGain();
+        state.masterGain.gain.value = state.muted ? 0 : 0.5;
+        state.masterGain.connect(state.audioCtx.destination);
+        state.audioReady = true;
+      }
+
+      function setMuted(muted) {
+        state.muted = muted;
+        if (state.masterGain) {
+          state.masterGain.gain.setTargetAtTime(muted ? 0 : 0.5, state.audioCtx.currentTime, 0.02);
+        }
+        muteBtn.textContent = muted ? 'MUDO' : 'ÁUDIO';
+      }
+
+      function playTone(freq, duration = 0.15, volume = 0.22, type = 'triangle', detune = 0) {
+        if (!state.audioReady || state.muted) return;
+        const t = state.audioCtx.currentTime;
+        const osc = state.audioCtx.createOscillator();
+        const gain = state.audioCtx.createGain();
+        const filter = state.audioCtx.createBiquadFilter();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        osc.detune.setValueAtTime(detune, t);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2200, t);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), t + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(state.masterGain);
+        osc.start(t);
+        osc.stop(t + duration + 0.04);
+      }
+
+      function playHitSound(lane, quality) {
+        const scale = [261.63, 293.66, 329.63, 349.23, 392, 440, 493.88, 523.25];
+        const q = quality === 'perfect' ? 1 : quality === 'great' ? 0.85 : 0.7;
+        const f = scale[lane % scale.length];
+        playTone(f, 0.16, 0.17 * q, 'triangle');
+        playTone(f * 2, 0.09, 0.06 * q, 'sine', quality === 'perfect' ? 4 : 0);
+      }
+
+      function playBeatSound(strong) {
+        if (!state.audioReady || state.muted) return;
+        const t = state.audioCtx.currentTime;
+        const osc = state.audioCtx.createOscillator();
+        const gain = state.audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(strong ? 95 : 72, t);
+        osc.frequency.exponentialRampToValueAtTime(42, t + 0.1);
+        gain.gain.setValueAtTime(strong ? 0.12 : 0.07, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+        osc.connect(gain);
+        gain.connect(state.masterGain);
+        osc.start(t);
+        osc.stop(t + 0.14);
+      }
+
+      function playMissSound() {
+        if (!state.audioReady || state.muted) return;
+        const t = state.audioCtx.currentTime;
+        const buffer = state.audioCtx.createBuffer(1, state.audioCtx.sampleRate * 0.08, state.audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+        const src = state.audioCtx.createBufferSource();
+        const gain = state.audioCtx.createGain();
+        const filter = state.audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 430;
+        gain.gain.value = 0.13;
+        src.buffer = buffer;
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(state.masterGain);
+        src.start(t);
+      }
+
+      function generateChart(mode) {
+        const rand = seededRandom(mode.id === 'hard' ? 8142026 : 4122026);
+        const notes = [];
+        const lanes = mode.keys.length;
+        let previousLane = Math.floor(lanes / 2);
+        let sequenceDirection = 1;
+
+        const startBeat = 4;
+        const totalBeats = Math.floor(SONG_DURATION / BEAT) - 2;
+
+        for (let beat = startBeat; beat < totalBeats; beat++) {
+          const section = Math.floor(beat / 16);
+          const intensity = clamp(0.58 + section * 0.07, 0.58, 0.96);
+          const isStrong = beat % 4 === 0;
+          const isFill = beat % 16 >= 12;
+          const chance = mode.density * (isStrong ? 1 : intensity);
+
+          if (rand() < chance) {
+            let lane;
+            if (beat % 8 === 0) {
+              lane = Math.floor(rand() * lanes);
+              sequenceDirection = rand() > 0.5 ? 1 : -1;
+            } else if (isFill && rand() < 0.68) {
+              lane = clamp(previousLane + sequenceDirection, 0, lanes - 1);
+              if (lane === 0 || lane === lanes - 1) sequenceDirection *= -1;
+            } else {
+              const jump = rand() < 0.72 ? (rand() < 0.5 ? -1 : 1) : Math.floor(rand() * lanes) - previousLane;
+              lane = clamp(previousLane + jump, 0, lanes - 1);
+            }
+
+            notes.push({ time: beat * BEAT, lane, hit: false, missed: false, quality: null });
+            previousLane = lane;
+          }
+
+          if (section >= 1 && rand() < 0.28 * mode.density) {
+            const subLane = clamp(previousLane + (rand() < 0.5 ? -1 : 1), 0, lanes - 1);
+            notes.push({ time: beat * BEAT + BEAT / 2, lane: subLane, hit: false, missed: false, quality: null });
+            previousLane = subLane;
+          }
+
+          if (mode.id === 'hard' && section >= 2 && beat % 8 === 6 && rand() < 0.6) {
+            let second = Math.floor(rand() * lanes);
+            if (second === previousLane) second = (second + 2) % lanes;
+            notes.push({ time: beat * BEAT + BEAT / 2, lane: second, hit: false, missed: false, quality: null });
+          }
+        }
+
+        return notes.sort((a, b) => a.time - b.time);
+      }
+
+      function resetRun() {
+        const mode = MODES[state.modeIndex];
+        state.chart = generateChart(mode);
+        state.particles = [];
+        state.floatingTexts = [];
+        state.keysDown.clear();
+        state.activeKeyFlash.clear();
+        state.score = 0;
+        state.combo = 0;
+        state.maxCombo = 0;
+        state.accuracyPoints = 0;
+        state.judgedNotes = 0;
+        state.counts = { perfect: 0, great: 0, good: 0, miss: 0 };
+        state.performance = 80;
+        state.fever = 0;
+        state.feverActive = false;
+        state.feverEndsAt = 0;
+        state.songStart = performance.now() / 1000 + 3.2;
+        state.totalPaused = 0;
+        state.pausedAt = 0;
+        state.lastBeat = -1;
+        state.feedback = '';
+        state.feedbackSub = '';
+        state.resultRank = '—';
+        state.resultWon = false;
+        state.screen = 'countdown';
+        srStatus.textContent = `Partida iniciada no modo ${mode.name}.`;
+      }
+
+      function startGame() {
+        setupAudio();
+        resetRun();
+        canvas.focus();
+      }
+
+      function currentSongTime() {
+        if (state.screen === 'paused') return state.pausedAt - state.songStart - state.totalPaused;
+        return nowSec() - state.songStart - state.totalPaused;
+      }
+
+      function pauseGame() {
+        if (state.screen === 'playing' || state.screen === 'countdown') {
+          state.pausedAt = nowSec();
+          state.previousScreen = state.screen;
+          state.screen = 'paused';
+          if (state.audioCtx && state.audioCtx.state === 'running') state.audioCtx.suspend();
+          srStatus.textContent = 'Jogo pausado.';
+        } else if (state.screen === 'paused') {
+          state.totalPaused += nowSec() - state.pausedAt;
+          state.screen = state.previousScreen || 'playing';
+          if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume();
+          srStatus.textContent = 'Jogo retomado.';
+        }
+      }
+
+      function endGame(earlyLoss = false) {
+        if (state.screen === 'result') return;
+        const accuracy = getAccuracy();
+        const mode = MODES[state.modeIndex];
+        state.resultWon = !earlyLoss && accuracy >= mode.minAccuracy;
+        state.resultRank = calculateRank(accuracy);
+        state.screen = 'result';
+        if (state.score > state.highScore) {
+          state.highScore = Math.floor(state.score);
+          saveHighScore(state.highScore);
+        }
+        srStatus.textContent = `${state.resultWon ? 'Vitória' : 'Derrota'}. Pontuação ${formatScore(state.score)}. Precisão ${Math.round(accuracy * 100)} por cento.`;
+      }
+
+      function getAccuracy() {
+        return state.judgedNotes > 0 ? state.accuracyPoints / state.judgedNotes : 0;
+      }
+
+      function calculateRank(a) {
+        if (a >= 0.99) return 'S+';
+        if (a >= 0.95) return 'S';
+        if (a >= 0.9) return 'A';
+        if (a >= 0.8) return 'B';
+        if (a >= 0.7) return 'C';
+        return 'D';
+      }
+
+      function comboMultiplier() {
+        if (state.combo >= 100) return 2.5;
+        if (state.combo >= 50) return 2;
+        if (state.combo >= 25) return 1.5;
+        if (state.combo >= 10) return 1.25;
+        return 1;
+      }
+
+      function registerHit(note, quality, delta) {
+        note.hit = true;
+        note.quality = quality;
+        const values = {
+          perfect: { factor: 1, perf: 1.35, fever: 7.5, label: 'PERFECT' },
+          great: { factor: 0.8, perf: 0.85, fever: 5.2, label: 'GREAT' },
+          good: { factor: 0.5, perf: 0.35, fever: 2.8, label: 'GOOD' }
+        };
+        const info = values[quality];
+        const feverMult = state.feverActive ? 2 : 1;
+        const gained = 100 * info.factor * comboMultiplier() * feverMult;
+        state.score += gained;
+        state.combo += 1;
+        state.maxCombo = Math.max(state.maxCombo, state.combo);
+        state.accuracyPoints += info.factor;
+        state.judgedNotes += 1;
+        state.counts[quality] += 1;
+        state.performance = clamp(state.performance + info.perf, 0, 100);
+        if (!state.feverActive) state.fever = clamp(state.fever + info.fever, 0, 100);
+        state.feedback = info.label;
+        state.feedbackSub = Math.abs(delta) < 0.018 ? 'ON BEAT' : delta < 0 ? 'EARLY' : 'LATE';
+        state.feedbackAt = nowSec();
+        state.pulse = 1;
+        state.activeKeyFlash.set(note.lane, 1);
+        spawnHitParticles(note.lane, quality);
+        state.floatingTexts.push({ text: `+${Math.round(gained)}`, lane: note.lane, born: nowSec(), life: 0.75, quality });
+        playHitSound(note.lane, quality);
+      }
+
+      function registerMiss(note, reason = 'MISS') {
+        if (note && !note.hit && !note.missed) note.missed = true;
+        state.combo = 0;
+        state.accuracyPoints += 0;
+        state.judgedNotes += 1;
+        state.counts.miss += 1;
+        state.performance = clamp(state.performance - 7.5, 0, 100);
+        if (!state.feverActive) state.fever = clamp(state.fever - 12, 0, 100);
+        state.feedback = reason;
+        state.feedbackSub = reason === 'MISS' ? 'NOTA PERDIDA' : 'TECLA EXTRA';
+        state.feedbackAt = nowSec();
+        state.shake = 1;
+        playMissSound();
+        if (state.performance <= 0) endGame(true);
+      }
+
+      function pressLane(lane) {
+        if (state.screen !== 'playing') return;
+        const t = currentSongTime();
+        let best = null;
+        let bestAbs = Infinity;
+        for (const note of state.chart) {
+          if (note.lane !== lane || note.hit || note.missed) continue;
+          const delta = t - note.time;
+          const abs = Math.abs(delta);
+          if (abs < bestAbs) {
+            best = note;
+            bestAbs = abs;
+          }
+          if (note.time > t + WINDOWS.miss) break;
+        }
+
+        if (!best || bestAbs > WINDOWS.good) {
+          state.activeKeyFlash.set(lane, 0.5);
+          state.performance = clamp(state.performance - 1.25, 0, 100);
+          state.feedback = 'OFF BEAT';
+          state.feedbackSub = 'SEM NOTA';
+          state.feedbackAt = nowSec();
+          state.shake = Math.max(state.shake, 0.25);
+          playMissSound();
+          if (state.performance <= 0) endGame(true);
+          return;
+        }
+
+        const delta = t - best.time;
+        let quality = 'good';
+        if (bestAbs <= WINDOWS.perfect) quality = 'perfect';
+        else if (bestAbs <= WINDOWS.great) quality = 'great';
+        registerHit(best, quality, delta);
+      }
+
+      function activateFever() {
+        if (state.screen !== 'playing' || state.feverActive || state.fever < 100) return;
+        state.feverActive = true;
+        state.feverEndsAt = currentSongTime() + state.feverDuration;
+        state.feedback = 'FEVER';
+        state.feedbackSub = 'MULTIPLICADOR ×2';
+        state.feedbackAt = nowSec();
+        state.pulse = 1.5;
+        for (let i = 0; i < 36; i++) spawnFeverParticle();
+        playTone(523.25, 0.28, 0.18, 'sawtooth');
+        playTone(659.25, 0.32, 0.12, 'triangle');
+        playTone(783.99, 0.38, 0.1, 'sine');
+      }
+
+      function spawnHitParticles(lane, quality) {
+        const colors = quality === 'perfect' ? ['#ffffff', '#ffd76a', '#75e6ff'] : quality === 'great' ? ['#d8a9ff', '#ffffff'] : ['#ffd78f'];
+        const geo = trackGeometry();
+        const x = laneCenterAt(lane, 1, geo);
+        for (let i = 0; i < (quality === 'perfect' ? 16 : 10); i++) {
+          state.particles.push({
+            x,
+            y: geo.targetY,
+            vx: (Math.random() - 0.5) * 250,
+            vy: -80 - Math.random() * 240,
+            gravity: 360,
+            size: 2 + Math.random() * 5,
+            born: nowSec(),
+            life: 0.45 + Math.random() * 0.4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 1
+          });
+        }
+      }
+
+      function spawnFeverParticle() {
+        state.particles.push({
+          x: 430 + Math.random() * 800,
+          y: 780 + Math.random() * 100,
+          vx: (Math.random() - 0.5) * 70,
+          vy: -150 - Math.random() * 320,
+          gravity: -10,
+          size: 2 + Math.random() * 4,
+          born: nowSec(),
+          life: 0.8 + Math.random() * 1.2,
+          color: Math.random() < 0.5 ? '#ffd65a' : '#b987ff',
+          alpha: 0.8
+        });
+      }
+
+      function update(dt) {
+        state.pulse = Math.max(0, state.pulse - dt * 3.7);
+        state.shake = Math.max(0, state.shake - dt * 4.8);
+        for (const [lane, v] of state.activeKeyFlash.entries()) {
+          const next = v - dt * 3.8;
+          if (next <= 0) state.activeKeyFlash.delete(lane);
+          else state.activeKeyFlash.set(lane, next);
+        }
+
+        const now = nowSec();
+        state.particles = state.particles.filter(p => now - p.born < p.life);
+        state.floatingTexts = state.floatingTexts.filter(p => now - p.born < p.life);
+
+        if (state.screen === 'countdown') {
+          const remaining = -currentSongTime();
+          state.countdown = Math.ceil(remaining);
+          if (remaining <= 0) {
+            state.screen = 'playing';
+            srStatus.textContent = 'Valendo.';
+          }
+          return;
+        }
+
+        if (state.screen !== 'playing') return;
+
+        const t = currentSongTime();
+        const beatIndex = Math.floor(Math.max(0, t) / BEAT);
+        if (beatIndex !== state.lastBeat) {
+          state.lastBeat = beatIndex;
+          playBeatSound(beatIndex % 4 === 0);
+        }
+
+        if (state.feverActive) {
+          const remaining = state.feverEndsAt - t;
+          state.fever = clamp((remaining / state.feverDuration) * 100, 0, 100);
+          if (remaining <= 0) {
+            state.feverActive = false;
+            state.fever = 0;
+          } else if (Math.random() < dt * 13) {
+            spawnFeverParticle();
+          }
+        }
+
+        for (const note of state.chart) {
+          if (!note.hit && !note.missed && t - note.time > WINDOWS.miss) registerMiss(note);
+        }
+
+        if (t >= SONG_DURATION) endGame(false);
+      }
+
+      function trackGeometry() {
+        const mode = MODES[state.modeIndex];
+        return {
+          x: 505,
+          topY: 180,
+          bottomY: 720,
+          targetY: 665,
+          topW: mode.keys.length === 4 ? 320 : 395,
+          bottomW: mode.keys.length === 4 ? 700 : 790,
+          lanes: mode.keys.length
+        };
+      }
+
+      function trackBoundsAt(progress, geo) {
+        const width = lerp(geo.topW, geo.bottomW, progress);
+        return { left: 885 - width / 2, width };
+      }
+
+      function laneCenterAt(lane, progress, geo) {
+        const bounds = trackBoundsAt(progress, geo);
+        return bounds.left + bounds.width * ((lane + 0.5) / geo.lanes);
+      }
+
+      function draw() {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillStyle = '#080909';
+        ctx.fillRect(0, 0, state.viewW, state.viewH);
+        beginScene();
+
+        const shakeX = state.shake ? (Math.random() - 0.5) * 8 * state.shake : 0;
+        const shakeY = state.shake ? (Math.random() - 0.5) * 5 * state.shake : 0;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+
+        drawStageBackground();
+
+        if (state.screen === 'menu') drawMenu();
+        else {
+          drawGameScene();
+          if (state.screen === 'paused') drawPauseOverlay();
+          if (state.screen === 'result') drawResultOverlay();
+          if (state.screen === 'countdown') drawCountdown();
+        }
+
+        ctx.restore();
+        endScene();
+      }
+
+      function drawStageBackground() {
+        const feverGlow = state.feverActive ? 0.24 : 0;
+        const bg = ctx.createLinearGradient(0, 0, 0, DESIGN_H);
+        bg.addColorStop(0, state.feverActive ? '#4b2b4f' : '#53402d');
+        bg.addColorStop(0.55, state.feverActive ? '#2a172e' : '#2b251d');
+        bg.addColorStop(1, '#080b0c');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+
+        const radial = ctx.createRadialGradient(860, 280, 50, 860, 340, 690);
+        radial.addColorStop(0, `rgba(255,214,139,${0.24 + feverGlow})`);
+        radial.addColorStop(0.45, `rgba(178,123,65,${0.13 + feverGlow * 0.5})`);
+        radial.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = radial;
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+
+        drawSpotlight(565, 65, 430, 760, 'rgba(255,215,154,.13)');
+        drawSpotlight(1050, 65, 1150, 760, state.feverActive ? 'rgba(196,122,255,.18)' : 'rgba(255,215,154,.12)');
+        drawSpotlight(800, 50, 760, 690, 'rgba(255,241,200,.10)');
+
+        // Industrial stage silhouettes
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#111516';
+        for (let i = 0; i < 10; i++) {
+          const x = i * 170 + (i % 2) * 40;
+          const h = 100 + (i % 4) * 38;
+          ctx.fillRect(x, 260 - h, 72, h);
+          ctx.fillRect(x + 14, 270 - h, 9, h + 100);
+          ctx.fillRect(x + 50, 250 - h, 8, h + 90);
+        }
+        ctx.restore();
+
+        drawScaffolding(1310, 155, 250, 330);
+        drawScaffolding(35, 210, 210, 280);
+        drawPianoSilhouette(385, 505, 0.82);
+        drawCrowd();
+
+        // Soft vignette
+        const vg = ctx.createRadialGradient(800, 420, 220, 800, 430, 900);
+        vg.addColorStop(0.55, 'rgba(0,0,0,0)');
+        vg.addColorStop(1, 'rgba(0,0,0,.68)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+      }
+
+      function drawSpotlight(x1, y1, x2, y2, color) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x1 - 22, y1);
+        ctx.lineTo(x2 - 135, y2);
+        ctx.lineTo(x2 + 135, y2);
+        ctx.lineTo(x1 + 22, y1);
+        ctx.closePath();
+        const g = ctx.createLinearGradient(x1, y1, x2, y2);
+        g.addColorStop(0, color);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawScaffolding(x, y, w, h) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(10,12,12,.48)';
+        ctx.lineWidth = 8;
+        ctx.strokeRect(x, y, w, h);
+        for (let i = 1; i < 4; i++) {
+          const yy = y + (h / 4) * i;
+          ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x + w, yy); ctx.stroke();
+        }
+        for (let i = 1; i < 3; i++) {
+          const xx = x + (w / 3) * i;
+          ctx.beginPath(); ctx.moveTo(xx, y); ctx.lineTo(xx, y + h); ctx.stroke();
+        }
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + w, y); ctx.lineTo(x, y + h); ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawPianoSilhouette(x, y, s) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(s, s);
+        ctx.fillStyle = '#080b0c';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(112, -10);
+        ctx.quadraticCurveTo(170, -30, 195, -70);
+        ctx.lineTo(202, -105);
+        ctx.quadraticCurveTo(156, -92, 120, -103);
+        ctx.quadraticCurveTo(78, -116, 40, -76);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillRect(10, 0, 190, 15);
+        ctx.fillRect(28, 10, 12, 88);
+        ctx.fillRect(165, 10, 12, 88);
+        ctx.fillRect(72, 18, 48, 8);
+        ctx.fillRect(86, 26, 9, 70);
+        ctx.beginPath();
+        ctx.moveTo(58, -88); ctx.lineTo(152, -160); ctx.lineTo(169, -152); ctx.lineTo(117, -98); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+
+      function drawCrowd() {
+        ctx.save();
+        const seed = seededRandom(2284);
+        for (let row = 0; row < 3; row++) {
+          const count = 22 + row * 6;
+          const y = 610 + row * 72;
+          const scale = 0.75 + row * 0.18;
+          for (let i = 0; i < count; i++) {
+            const x = (i / (count - 1)) * 1660 - 30 + (seed() - 0.5) * 35;
+            const bob = Math.sin(nowSec() * 2 + i * 0.8) * 3;
+            drawPerson(x, y + bob, scale, seed() > 0.6, seed());
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawPerson(x, y, s, raised, variation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(s, s);
+        ctx.fillStyle = variation > 0.5 ? '#0a0e0f' : '#0d1112';
+        ctx.beginPath(); ctx.arc(0, -42, 15, 0, TWO_PI); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-24, -25); ctx.quadraticCurveTo(0, -40, 24, -25); ctx.lineTo(35, 42); ctx.lineTo(-35, 42); ctx.closePath(); ctx.fill();
+        if (raised) {
+          const wave = Math.sin(nowSec() * 2.5 + x * 0.01) * 5;
+          ctx.lineWidth = 10;
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = ctx.fillStyle;
+          ctx.beginPath(); ctx.moveTo(-18, -14); ctx.lineTo(-30, -58); ctx.lineTo(-20 + wave, -94); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(18, -14); ctx.lineTo(34, -54); ctx.lineTo(28 - wave, -88); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawLogo(centerX = 880, y = 60, scale = 1) {
+        ctx.save();
+        ctx.translate(centerX, y);
+        ctx.scale(scale, scale);
+        ctx.rotate(-0.018);
+        ctx.shadowColor = 'rgba(0,0,0,.65)';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 14;
+        ctx.shadowOffsetY = 14;
+        ctx.fillStyle = '#0b0e0f';
+        ctx.fillRect(-255, 15, 520, 112);
+        ctx.shadowColor = 'transparent';
+        ctx.fillStyle = '#f2f0e8';
+        ctx.beginPath();
+        ctx.moveTo(-275, 0); ctx.lineTo(270, -10); ctx.lineTo(255, 110); ctx.lineTo(-290, 120); ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#101314';
+        ctx.font = '900 74px Impact, Arial Black, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('PIANO HERO', -10, 57);
+
+        // crown / piano bars
+        ctx.fillStyle = '#15191b';
+        ctx.beginPath();
+        ctx.moveTo(-54, -20); ctx.lineTo(36, -24); ctx.lineTo(45, 10); ctx.lineTo(-62, 14); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#f0ad3e';
+        for (let i = 0; i < 4; i++) {
+          const h = [32, 45, 39, 31][i];
+          fillRoundRect(-39 + i * 20, -13 - h, 10, h, 3, '#f0ad3e');
+        }
+        ctx.restore();
+      }
+
+      function drawMenu() {
+        drawLogo(800, 92, 1.05);
+
+        ctx.fillStyle = 'rgba(8,10,11,.78)';
+        fillRoundRect(445, 280, 710, 430, 24, 'rgba(9,12,13,.86)');
+        strokeRoundRect(445, 280, 710, 430, 24, 'rgba(255,255,255,.14)', 2);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f4f0e8';
+        ctx.font = '900 30px Arial Black, sans-serif';
+        ctx.fillText('ESCOLHA SUA DIFICULDADE', 800, 330);
+        ctx.fillStyle = 'rgba(255,255,255,.62)';
+        ctx.font = '600 16px Arial, sans-serif';
+        ctx.fillText('Notas caem no ritmo. Pressione a tecla ao cruzar a linha de execução.', 800, 363);
+
+        const cardY = 402;
+        const cardW = 275;
+        const cardH = 142;
+        MODES.forEach((mode, i) => {
+          const x = i === 0 ? 492 : 833;
+          const selected = state.modeIndex === i;
+          const hover = state.hoverTarget === `mode-${i}`;
+          fillRoundRect(x, cardY, cardW, cardH, 18, selected ? 'rgba(236,169,57,.17)' : hover ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.035)');
+          strokeRoundRect(x, cardY, cardW, cardH, 18, selected ? '#f1ad3b' : 'rgba(255,255,255,.13)', selected ? 3 : 1.5);
+          ctx.textAlign = 'left';
+          ctx.fillStyle = selected ? '#f6b64a' : '#f2f0ea';
+          ctx.font = '900 34px Arial Black, sans-serif';
+          ctx.fillText(mode.name, x + 26, cardY + 47);
+          ctx.fillStyle = selected ? '#fff0c9' : 'rgba(255,255,255,.66)';
+          ctx.font = '800 16px Arial, sans-serif';
+          ctx.fillText(mode.subtitle, x + 28, cardY + 76);
+          ctx.fillStyle = 'rgba(255,255,255,.5)';
+          ctx.font = '600 14px Arial, sans-serif';
+          ctx.fillText(mode.label, x + 28, cardY + 108);
+          ctx.fillStyle = selected ? '#f1ad3b' : 'rgba(255,255,255,.22)';
+          ctx.beginPath(); ctx.arc(x + cardW - 33, cardY + 34, 9, 0, TWO_PI); ctx.fill();
+        });
+
+        const playHover = state.hoverTarget === 'play';
+        fillRoundRect(560, 580, 480, 78, 16, playHover ? '#ffc45b' : '#efa83a');
+        ctx.fillStyle = '#181713';
+        ctx.textAlign = 'center';
+        ctx.font = '900 28px Arial Black, sans-serif';
+        ctx.fillText('INICIAR APRESENTAÇÃO', 800, 630);
+
+        ctx.fillStyle = 'rgba(255,255,255,.52)';
+        ctx.font = '600 14px Arial, sans-serif';
+        ctx.fillText('ENTER para jogar  •  SETAS para alternar  •  P para pausar', 800, 689);
+      }
+
+      function drawGameScene() {
+        const geo = trackGeometry();
+        drawLeftPanel();
+        drawTrack(geo);
+        drawNotes(geo);
+        drawHitLineAndKeys(geo);
+        drawFeverBar(geo);
+        drawParticles();
+        drawFloatingTexts(geo);
+        drawFeedback();
+        drawSongProgress();
+        drawLogo(880, 49, 0.88);
+      }
+
+      function drawLeftPanel() {
+        const mode = MODES[state.modeIndex];
+        const t = clamp(currentSongTime(), 0, SONG_DURATION);
+        fillRoundRect(45, 120, 350, 500, 6, 'rgba(10,13,14,.91)');
+        ctx.fillStyle = '#f1eee7';
+        ctx.fillRect(45, 120, 350, 175);
+
+        // Album cover
+        const cover = ctx.createLinearGradient(65, 140, 168, 270);
+        cover.addColorStop(0, '#17152b');
+        cover.addColorStop(.5, '#222a55');
+        cover.addColorStop(1, '#4a2357');
+        fillRoundRect(65, 142, 105, 125, 4, cover);
+        ctx.save();
+        ctx.translate(117, 205);
+        ctx.fillStyle = 'rgba(105,137,255,.55)';
+        ctx.beginPath(); ctx.arc(5, 10, 31, .3, 4.7); ctx.fill();
+        ctx.fillStyle = '#8f6cff';
+        for (let i = 0; i < 11; i++) {
+          ctx.beginPath();
+          const a = i / 11 * TWO_PI;
+          const r = 28 + (i % 3) * 9;
+          ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 3 + (i % 2), 0, TWO_PI);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.fillStyle = '#111415';
+        ctx.textAlign = 'left';
+        ctx.font = '900 26px Arial Black, sans-serif';
+        ctx.fillText('NOCTURNE', 190, 168);
+        ctx.fillText('OF THE RIFT', 190, 199);
+        ctx.fillStyle = '#765c4c';
+        ctx.font = '800 15px Arial, sans-serif';
+        ctx.fillText('LUDOVICO EINAUDI', 190, 224);
+
+        fillRoundRect(190, 240, mode.id === 'hard' ? 77 : 94, 28, 4, mode.id === 'hard' ? '#7950a8' : '#2c8ab2');
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 13px Arial, sans-serif';
+        ctx.fillText(mode.id === 'hard' ? '◆ HARD' : '◆ NORMAL', 201, 259);
+        ctx.fillStyle = '#111415';
+        ctx.font = '800 14px Arial, sans-serif';
+        ctx.fillText(`${formatTime(t)} / ${formatTime(SONG_DURATION)}`, 292, 259);
+
+        ctx.fillStyle = '#f2f0ea';
+        ctx.font = '900 20px Arial Black, sans-serif';
+        ctx.fillText('SCORE', 68, 336);
+        ctx.fillStyle = '#f3ae3a';
+        ctx.font = '900 55px Arial Black, sans-serif';
+        ctx.fillText(formatScore(state.score), 68, 394);
+        ctx.strokeStyle = 'rgba(222,175,87,.25)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(68, 425); ctx.lineTo(365, 425); ctx.stroke();
+
+        ctx.fillStyle = '#f2f0ea';
+        ctx.font = '900 20px Arial Black, sans-serif';
+        ctx.fillText('COMBO', 68, 470);
+        ctx.fillStyle = '#f3ae3a';
+        ctx.font = '900 55px Arial Black, sans-serif';
+        ctx.fillText(`${state.combo}×`, 68, 530);
+        ctx.fillStyle = '#f2f0ea';
+        ctx.font = '800 15px Arial, sans-serif';
+        ctx.fillText(`MELHOR ${state.maxCombo}`, 68, 560);
+
+        ctx.fillStyle = 'rgba(255,255,255,.65)';
+        ctx.font = '700 13px Arial, sans-serif';
+        ctx.fillText(`PRECISÃO ${Math.round(getAccuracy() * 100)}%`, 68, 593);
+        ctx.fillText(`RECORDE ${formatScore(state.highScore)}`, 208, 593);
+      }
+
+      function formatTime(sec) {
+        sec = Math.max(0, Math.floor(sec));
+        return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+      }
+
+      function drawTrack(geo) {
+        const top = trackBoundsAt(0, geo);
+        const bottom = trackBoundsAt(1, geo);
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,.7)';
+        ctx.shadowBlur = 35;
+        ctx.shadowOffsetY = 16;
+        ctx.beginPath();
+        ctx.moveTo(top.left - 15, geo.topY);
+        ctx.lineTo(top.left + top.width + 15, geo.topY);
+        ctx.lineTo(bottom.left + bottom.width + 22, geo.bottomY);
+        ctx.lineTo(bottom.left - 22, geo.bottomY);
+        ctx.closePath();
+        ctx.fillStyle = '#111617';
+        ctx.fill();
+        ctx.restore();
+
+        const tg = ctx.createLinearGradient(0, geo.topY, 0, geo.bottomY);
+        tg.addColorStop(0, '#111516');
+        tg.addColorStop(0.65, '#0e1314');
+        tg.addColorStop(1, '#111718');
+        ctx.beginPath();
+        ctx.moveTo(top.left, geo.topY);
+        ctx.lineTo(top.left + top.width, geo.topY);
+        ctx.lineTo(bottom.left + bottom.width, geo.bottomY);
+        ctx.lineTo(bottom.left, geo.bottomY);
+        ctx.closePath();
+        ctx.fillStyle = tg;
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = '#ece8df';
+        ctx.lineWidth = 8;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // Perspective lane separators
+        for (let i = 1; i < geo.lanes; i++) {
+          const topX = top.left + top.width * (i / geo.lanes);
+          const bottomX = bottom.left + bottom.width * (i / geo.lanes);
+          const palette = lanePalette[Math.min(i - 1, lanePalette.length - 1)];
+          const g = ctx.createLinearGradient(topX, geo.topY, bottomX, geo.bottomY);
+          g.addColorStop(0, 'rgba(255,255,255,.08)');
+          g.addColorStop(.35, palette.main);
+          g.addColorStop(1, palette.light);
+          ctx.strokeStyle = g;
+          ctx.globalAlpha = state.feverActive ? 0.85 : 0.58;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(topX, geo.topY + 18);
+          ctx.lineTo(bottomX, geo.bottomY - 28);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        // Beat rails moving downward
+        if (state.screen === 'playing' || state.screen === 'countdown' || state.screen === 'paused') {
+          const t = Math.max(0, currentSongTime());
+          for (let i = -2; i < 10; i++) {
+            const beatTime = Math.floor(t / BEAT) * BEAT + i * BEAT;
+            const delta = beatTime - t;
+            if (delta < 0 || delta > APPROACH_TIME) continue;
+            const p = 1 - delta / APPROACH_TIME;
+            const y = lerp(geo.topY, geo.targetY, easeInQuad(p));
+            const b = trackBoundsAt(easeInQuad(p), geo);
+            ctx.strokeStyle = `rgba(255,255,255,${0.025 + p * 0.06})`;
+            ctx.lineWidth = beatTime / BEAT % 4 === 0 ? 2 : 1;
+            ctx.beginPath(); ctx.moveTo(b.left + 4, y); ctx.lineTo(b.left + b.width - 4, y); ctx.stroke();
+          }
+        }
+      }
+
+      function drawNotes(geo) {
+        if (state.screen === 'result') return;
+        const t = currentSongTime();
+        for (const note of state.chart) {
+          if (note.hit || note.missed) continue;
+          const delta = note.time - t;
+          if (delta > APPROACH_TIME || delta < -WINDOWS.miss) continue;
+          const progress = clamp(1 - delta / APPROACH_TIME, 0, 1.06);
+          const p = easeInQuad(clamp(progress, 0, 1));
+          const y = lerp(geo.topY + 25, geo.targetY, p);
+          const center = laneCenterAt(note.lane, p, geo);
+          const bounds = trackBoundsAt(p, geo);
+          const laneW = bounds.width / geo.lanes;
+          const w = laneW * 0.72;
+          const h = lerp(35, 66, p);
+          drawNote(center - w / 2, y - h / 2, w, h, note.lane, p);
+        }
+      }
+
+      function drawNote(x, y, w, h, lane, p) {
+        const palette = lanePalette[lane % lanePalette.length];
+        ctx.save();
+        ctx.shadowColor = palette.main;
+        ctx.shadowBlur = state.feverActive ? 22 : 10;
+        fillRoundRect(x, y + 8, w, h, 7 + p * 4, palette.dark);
+        const g = ctx.createLinearGradient(x, y, x, y + h);
+        g.addColorStop(0, palette.light);
+        g.addColorStop(0.5, palette.main);
+        g.addColorStop(1, palette.dark);
+        fillRoundRect(x, y, w, h, 7 + p * 4, g);
+        strokeRoundRect(x, y, w, h, 7 + p * 4, 'rgba(255,255,255,.3)', 1.5);
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = `900 ${Math.round(18 + 18 * p)}px Arial Black, sans-serif`;
+        ctx.fillText(MODES[state.modeIndex].keys[lane], x + w / 2, y + h / 2 + 1);
+        ctx.restore();
+      }
+
+      function drawHitLineAndKeys(geo) {
+        const bottom = trackBoundsAt(1, geo);
+        const keyY = 735;
+        const gap = 10;
+        const keyW = (bottom.width - gap * (geo.lanes - 1)) / geo.lanes;
+        const keyH = 78;
+
+        // Judgement line
+        ctx.save();
+        ctx.shadowColor = state.feverActive ? '#ffd15a' : '#ffffff';
+        ctx.shadowBlur = 16 + state.pulse * 16;
+        ctx.strokeStyle = state.feverActive ? '#ffd65d' : '#f3eee5';
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(bottom.left, geo.targetY); ctx.lineTo(bottom.left + bottom.width, geo.targetY); ctx.stroke();
+        ctx.restore();
+
+        MODES[state.modeIndex].keys.forEach((key, lane) => {
+          const x = bottom.left + lane * (keyW + gap);
+          const active = state.keysDown.has(key);
+          const flash = state.activeKeyFlash.get(lane) || 0;
+          const palette = lanePalette[lane % lanePalette.length];
+          const fill = active || flash > 0.25 ? palette.dark : '#14191a';
+          ctx.save();
+          if (active || flash > 0) {
+            ctx.shadowColor = palette.main;
+            ctx.shadowBlur = 20 * Math.max(flash, active ? 1 : 0);
+          }
+          fillRoundRect(x, keyY, keyW, keyH, 7, fill);
+          strokeRoundRect(x, keyY, keyW, keyH, 7, active || flash > 0.2 ? palette.light : 'rgba(255,255,255,.18)', active ? 4 : 3);
+          ctx.fillStyle = active ? '#fff' : '#f4f0e8';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = '900 29px Arial Black, sans-serif';
+          ctx.fillText(key, x + keyW / 2, keyY + keyH / 2 + 2);
+          ctx.fillStyle = palette.main;
+          fillRoundRect(x, keyY + keyH + 12, keyW, 5, 3, palette.main);
+          ctx.restore();
+        });
+      }
+
+      function drawFeverBar(geo) {
+        const bottom = trackBoundsAt(1, geo);
+        const x = bottom.left + 65;
+        const y = 846;
+        const w = bottom.width - 130;
+        const h = 28;
+        fillRoundRect(x, y, w, h, 8, 'rgba(10,14,15,.88)');
+        strokeRoundRect(x, y, w, h, 8, 'rgba(255,255,255,.14)', 3);
+        const fillW = (w - 8) * (state.fever / 100);
+        if (fillW > 0) {
+          const g = ctx.createLinearGradient(x, y, x + w, y);
+          g.addColorStop(0, '#dd425a');
+          g.addColorStop(0.55, '#f05d67');
+          g.addColorStop(1, state.feverActive ? '#ffd259' : '#a43f70');
+          fillRoundRect(x + 4, y + 4, fillW, h - 8, 5, g);
+        }
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '900 17px Arial Black, sans-serif';
+        ctx.fillText(state.feverActive ? `FEVER ×2  ${Math.ceil(state.fever)}%` : state.fever >= 100 ? 'ESPAÇO — ATIVAR FEVER' : `FEVER ${Math.floor(state.fever)}%`, x + w / 2, y + h / 2 + 1);
+        ctx.fillStyle = '#ee415c';
+        ctx.font = '900 24px Arial, sans-serif';
+        ctx.fillText('♥', x - 25, y + h / 2 + 1);
+      }
+
+      function drawParticles() {
+        const now = nowSec();
+        for (const p of state.particles) {
+          const age = now - p.born;
+          const t = age / p.life;
+          const x = p.x + p.vx * age;
+          const y = p.y + p.vy * age + 0.5 * p.gravity * age * age;
+          ctx.globalAlpha = (1 - t) * p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath(); ctx.arc(x, y, p.size * (1 - t * 0.35), 0, TWO_PI); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawFloatingTexts(geo) {
+        const now = nowSec();
+        for (const f of state.floatingTexts) {
+          const t = (now - f.born) / f.life;
+          const x = laneCenterAt(f.lane, 1, geo);
+          const y = geo.targetY - 42 - t * 70;
+          ctx.globalAlpha = 1 - t;
+          ctx.fillStyle = f.quality === 'perfect' ? '#ffd65c' : f.quality === 'great' ? '#c995ff' : '#f3e1bc';
+          ctx.font = '900 19px Arial Black, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(f.text, x, y);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawFeedback() {
+        if (!state.feedback) return;
+        const age = nowSec() - state.feedbackAt;
+        if (age > 0.82) return;
+        const t = age / 0.82;
+        const scale = 1 + (1 - easeOutCubic(clamp(age / 0.18, 0, 1))) * 0.35;
+        ctx.save();
+        ctx.translate(885, 615);
+        ctx.scale(scale, scale);
+        ctx.globalAlpha = 1 - Math.max(0, (t - 0.65) / 0.35);
+        const color = state.feedback === 'PERFECT' ? '#f2b23d' : state.feedback === 'GREAT' ? '#a568d2' : state.feedback === 'GOOD' ? '#f1e2bf' : state.feedback === 'FEVER' ? '#ffd65c' : '#e45460';
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.font = 'italic 900 29px Arial Black, sans-serif';
+        ctx.fillText(state.feedback, 0, 0);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '800 11px Arial, sans-serif';
+        ctx.fillText(state.feedbackSub, 0, 22);
+        ctx.restore();
+      }
+
+      function drawSongProgress() {
+        const progress = clamp(currentSongTime() / SONG_DURATION, 0, 1);
+        const x = 505;
+        const y = 159;
+        const w = 760;
+        fillRoundRect(x, y, w, 5, 3, 'rgba(255,255,255,.12)');
+        fillRoundRect(x, y, w * progress, 5, 3, state.feverActive ? '#d39aff' : '#f0ac3a');
+      }
+
+      function drawCountdown() {
+        const remaining = -currentSongTime();
+        const value = remaining > 0.5 ? Math.ceil(remaining) : 'GO!';
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,.24)';
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#f0a83b';
+        ctx.shadowBlur = 25;
+        ctx.fillStyle = '#fff3d0';
+        ctx.font = '900 110px Arial Black, sans-serif';
+        ctx.fillText(String(value), 885, 465);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'rgba(255,255,255,.8)';
+        ctx.font = '800 18px Arial, sans-serif';
+        ctx.fillText('PREPARE-SE', 885, 540);
+        ctx.restore();
+      }
+
+      function drawPauseOverlay() {
+        ctx.fillStyle = 'rgba(4,6,7,.78)';
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+        fillRoundRect(540, 275, 520, 330, 24, 'rgba(16,20,21,.96)');
+        strokeRoundRect(540, 275, 520, 330, 24, 'rgba(255,255,255,.16)', 2);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f4f1e9';
+        ctx.font = '900 54px Arial Black, sans-serif';
+        ctx.fillText('PAUSADO', 800, 360);
+        ctx.fillStyle = 'rgba(255,255,255,.66)';
+        ctx.font = '600 17px Arial, sans-serif';
+        ctx.fillText('Respire. O palco espera por você.', 800, 400);
+        fillRoundRect(620, 455, 360, 68, 14, '#efa83a');
+        ctx.fillStyle = '#171714';
+        ctx.font = '900 22px Arial Black, sans-serif';
+        ctx.fillText('CONTINUAR  [P]', 800, 499);
+        ctx.fillStyle = 'rgba(255,255,255,.52)';
+        ctx.font = '700 14px Arial, sans-serif';
+        ctx.fillText('R para reiniciar  •  ESC para continuar', 800, 560);
+      }
+
+      function drawResultOverlay() {
+        ctx.fillStyle = 'rgba(4,6,7,.82)';
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+        fillRoundRect(395, 126, 810, 650, 28, 'rgba(15,19,20,.97)');
+        strokeRoundRect(395, 126, 810, 650, 28, state.resultWon ? 'rgba(243,174,58,.55)' : 'rgba(227,74,91,.5)', 3);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = state.resultWon ? '#f2b13d' : '#e55763';
+        ctx.font = '900 26px Arial Black, sans-serif';
+        ctx.fillText(state.resultWon ? 'APRESENTAÇÃO CONCLUÍDA' : 'APRESENTAÇÃO ENCERRADA', 800, 187);
+        ctx.fillStyle = '#f4f0e8';
+        ctx.font = '900 86px Arial Black, sans-serif';
+        ctx.fillText(state.resultRank, 800, 283);
+        ctx.fillStyle = 'rgba(255,255,255,.62)';
+        ctx.font = '800 15px Arial, sans-serif';
+        ctx.fillText(`META DO MODO: ${Math.round(MODES[state.modeIndex].minAccuracy * 100)}% DE PRECISÃO`, 800, 316);
+
+        const stats = [
+          ['PONTUAÇÃO', formatScore(state.score)],
+          ['PRECISÃO', `${Math.round(getAccuracy() * 100)}%`],
+          ['COMBO MÁXIMO', String(state.maxCombo)],
+          ['PERFORMANCE', `${Math.round(state.performance)} / 100`]
+        ];
+        stats.forEach((s, i) => {
+          const x = 455 + (i % 2) * 370;
+          const y = 355 + Math.floor(i / 2) * 100;
+          fillRoundRect(x, y, 320, 78, 12, 'rgba(255,255,255,.045)');
+          ctx.textAlign = 'left';
+          ctx.fillStyle = 'rgba(255,255,255,.55)';
+          ctx.font = '800 12px Arial, sans-serif';
+          ctx.fillText(s[0], x + 20, y + 25);
+          ctx.fillStyle = '#f4f0e8';
+          ctx.font = '900 27px Arial Black, sans-serif';
+          ctx.fillText(s[1], x + 20, y + 58);
+        });
+
+        const judgeLabels = [
+          ['PERFECT', state.counts.perfect, '#f1b13e'],
+          ['GREAT', state.counts.great, '#a56ad2'],
+          ['GOOD', state.counts.good, '#e6d3ad'],
+          ['MISS', state.counts.miss, '#e65662']
+        ];
+        judgeLabels.forEach((j, i) => {
+          const x = 470 + i * 170;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = j[2];
+          ctx.font = '900 14px Arial Black, sans-serif';
+          ctx.fillText(j[0], x, 586);
+          ctx.fillStyle = '#fff';
+          ctx.font = '900 25px Arial Black, sans-serif';
+          ctx.fillText(String(j[1]), x, 618);
+        });
+
+        const hover = state.hoverTarget === 'replay';
+        fillRoundRect(560, 660, 480, 76, 15, hover ? '#ffc45b' : '#efa83a');
+        ctx.fillStyle = '#181713';
+        ctx.font = '900 24px Arial Black, sans-serif';
+        ctx.fillText('JOGAR NOVAMENTE  [ENTER]', 800, 708);
+      }
+
+      function getHitTarget(p) {
+        if (state.screen === 'menu') {
+          if (p.y >= 402 && p.y <= 544) {
+            if (p.x >= 492 && p.x <= 767) return 'mode-0';
+            if (p.x >= 833 && p.x <= 1108) return 'mode-1';
+          }
+          if (p.x >= 560 && p.x <= 1040 && p.y >= 580 && p.y <= 658) return 'play';
+        }
+        if (state.screen === 'result' && p.x >= 560 && p.x <= 1040 && p.y >= 660 && p.y <= 736) return 'replay';
+        if (state.screen === 'paused' && p.x >= 620 && p.x <= 980 && p.y >= 455 && p.y <= 523) return 'resume';
+        return null;
+      }
+
+      function handleCanvasClick(target) {
+        if (!target) return;
+        if (target === 'mode-0') state.modeIndex = 0;
+        else if (target === 'mode-1') state.modeIndex = 1;
+        else if (target === 'play' || target === 'replay') startGame();
+        else if (target === 'resume') pauseGame();
+      }
+
+      function handleKeyDown(e) {
+        if (e.repeat) return;
+        const key = e.key === ';' ? ';' : e.key.toUpperCase();
+
+        if (['ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Escape'].includes(e.key)) e.preventDefault();
+
+        if (state.screen === 'menu') {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') state.modeIndex = state.modeIndex === 0 ? 1 : 0;
+          if (e.key === 'Enter') startGame();
+          return;
+        }
+
+        if (state.screen === 'result') {
+          if (e.key === 'Enter' || key === 'R') startGame();
+          if (e.key === 'Escape') state.screen = 'menu';
+          return;
+        }
+
+        if (state.screen === 'paused') {
+          if (key === 'P' || e.key === 'Escape') pauseGame();
+          if (key === 'R') startGame();
+          return;
+        }
+
+        if (key === 'P' || e.key === 'Escape') {
+          pauseGame();
+          return;
+        }
+
+        if (key === 'R') {
+          startGame();
+          return;
+        }
+
+        if (e.code === 'Space') {
+          activateFever();
+          return;
+        }
+
+        const mode = MODES[state.modeIndex];
+        const lane = mode.keys.indexOf(key);
+        if (lane >= 0) {
+          state.keysDown.add(key);
+          pressLane(lane);
+        }
+      }
+
+      function handleKeyUp(e) {
+        const key = e.key === ';' ? ';' : e.key.toUpperCase();
+        state.keysDown.delete(key);
+      }
+
+      function loop(ts) {
+        const dt = Math.min(0.05, (ts - state.lastFrame) / 1000 || 0);
+        state.lastFrame = ts;
+        update(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      window.addEventListener('resize', fitCanvas);
+      window.addEventListener('keydown', handleKeyDown, { passive: false });
+      window.addEventListener('keyup', handleKeyUp);
+      window.addEventListener('blur', () => {
+        state.keysDown.clear();
+        if (state.screen === 'playing') pauseGame();
+      });
+
+      canvas.addEventListener('mousemove', e => {
+        const p = toDesign(e.clientX, e.clientY);
+        state.mouse = p;
+        state.hoverTarget = getHitTarget(p);
+        canvas.style.cursor = state.hoverTarget ? 'pointer' : 'default';
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        state.hoverTarget = null;
+        canvas.style.cursor = 'default';
+      });
+
+      canvas.addEventListener('click', e => {
+        setupAudio();
+        const p = toDesign(e.clientX, e.clientY);
+        handleCanvasClick(getHitTarget(p));
+        canvas.focus();
+      });
+
+      pauseBtn.addEventListener('click', () => pauseGame());
+      muteBtn.addEventListener('click', () => {
+        setupAudio();
+        setMuted(!state.muted);
+      });
+      fullscreenBtn.addEventListener('click', async () => {
+        try {
+          if (!document.fullscreenElement) await shell.requestFullscreen();
+          else await document.exitFullscreen();
+        } catch (_) {}
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && state.screen === 'playing') pauseGame();
+      });
+
+      fitCanvas();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

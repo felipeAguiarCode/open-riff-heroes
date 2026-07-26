@@ -6,28 +6,47 @@ Jogo de ritmo estilo Guitar Hero / Rock Band em um único arquivo HTML, com áud
 
 ## Recursos
 
-- **Notas neon** com brilho e paleta viva (turquesa/âmbar/violeta)
-- **Notas longas (hold)** com rastro em perspectiva estilo Guitar Hero — segure a tecla até o fim
-- **Notas boost** em azul-choque: acerte para ativar multiplicador ×2 temporário (empilha com combo e Fever até ×10)
-- **Tela inicial** estilo Rock Band + **seleção de músicas** com capas, dificuldade e recorde por música
-- **Áudio via YouTube** (player oculto) com clock híbrido sincronizado a `getCurrentTime()`
-- Charts determinísticos autorados por música, coerentes com a estrutura musical
+- **Notas neon nas cores do Guitar Hero** (verde, vermelho, amarelo, azul)
+- **Notas longas (hold)** com rastro em perspectiva — segure a tecla até o fim
+- **Notas boost** azul-choque: multiplicador ×2 temporário (empilha com combo e Fever até ×10)
+- **Seletor de discos**: carrossel de álbuns com vinil girando; ‹ › troca de disco com animação
+- **Charts em JSON** (`charts/<id>.json`): link do YouTube, tempo e sequência de notas configuráveis sem tocar no código — botão ⤓ EXPORTAR JSON na tela de seleção
+- Clock híbrido sincronizado ao player do YouTube, com calibração de offset ao vivo
 
-## Músicas
+## Discos e músicas
 
-| Música | Fonte | Duração | Dificuldade |
-|---|---|---|---|
-| Moonlight Sonata (1º mov.) — Beethoven | [YouTube](https://www.youtube.com/watch?v=4591dCHe_sE) | ~5:50 | ●●○○○ |
-| Mickey Mouse March (Eurobeat Ver.) — DDR Disney Mix | [YouTube](https://www.youtube.com/watch?v=2IF8IdRLdAM) | ~1:38 | ●●●●○ |
+### Disco 1 — LENDAS DO ROCK
+
+| Música | Duração | Dificuldade |
+|---|---|---|
+| Paint It, Black — The Rolling Stones | 3:41 | ●●●○○ |
+| Welcome to the Jungle — Guns N' Roses | 4:30 | ●●●●○ |
+| One — Metallica (multi-tempo 108→212 BPM) | 7:25 | ●●●●○ |
+| Knights of Cydonia — Muse | 6:03 | ●●●●○ |
+| Through the Fire and Flames — DragonForce | 7:18 | ●●●●● |
+
+### Disco 2 — PIANO & ARCADE
+
+| Música | Duração | Dificuldade |
+|---|---|---|
+| Moonlight Sonata (1º mov.) — Beethoven | 5:50 | ●●○○○ |
+| Mickey Mouse March (Eurobeat Ver.) — DDR Disney Mix | 1:38 | ●●●●○ |
 
 ## Controles
 
-- **D F J K** — pistas · **Espaço** — ativar Fever · **P/Esc** — pausar · **R** — reiniciar · **Q** — sair para músicas
-- **, / .** — calibrar offset de áudio em ±25 ms (persistido por música)
+- **D F J K** — pistas · **Espaço** — Fever · **P/Esc** — pausar · **R** — reiniciar · **Q** — sair para músicas
+- **‹ ›** (setas ← →) — trocar de disco · **↑ ↓ / W S** — escolher música
+- **, / .** — calibrar offset de áudio em ±25 ms (persistido por música e incluído no JSON exportado)
+
+## Charts em JSON
+
+Cada música é definida por `charts/<id>.json`, carregado por fetch na inicialização (com fallback para o chart embutido). Formato das notas: `[tempo, pista]` (tap), `[tempo, pista, "h", duração]` (hold), `[tempo, pista, "b"]` (boost) — tempos em segundos relativos a `startAtSec`. O campo `youtube` aceita qualquer URL de vídeo do YouTube.
+
+Fluxo de edição: jogue → calibre com `,`/`.` → **⤓ EXPORTAR JSON** → substitua o arquivo em `charts/` → commit.
 
 ## Rodar localmente
 
-A API do YouTube não funciona via `file://` — sirva por HTTP:
+A API do YouTube e o fetch dos charts não funcionam via `file://` — sirva por HTTP:
 
 ```bash
 python -m http.server 8000
@@ -37,5 +56,5 @@ python -m http.server 8000
 ## Estrutura
 
 - `index.html` — o jogo completo (HTML/CSS/JS em um único arquivo)
+- `charts/*.json` — definição configurável de cada música (link, tempo, notas)
 - `raw/GDD.md` — Game Design Document
-- `raw/` — referências e materiais de apoio

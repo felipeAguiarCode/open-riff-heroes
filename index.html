@@ -142,12 +142,13 @@
 
       const boostPalette = { light: '#8ff7ff', main: '#00eaff', deep: '#0066ff', dark: '#003c99', glow: 'rgba(0,234,255,.9)' };
 
+      // Cores das pistas no padrão Guitar Hero: verde, vermelho, amarelo, azul (+ laranja na 5ª)
       const lanePalette = [
-        { main: '#00e5c8', light: '#7dffe9', dark: '#00745f', glow: 'rgba(0,229,200,.85)' },
-        { main: '#00cdbb', light: '#66f2e4', dark: '#00655c', glow: 'rgba(0,205,187,.85)' },
-        { main: '#00b3a0', light: '#54e0d0', dark: '#005a50', glow: 'rgba(0,179,160,.85)' },
-        { main: '#ffb300', light: '#ffe066', dark: '#8f5e00', glow: 'rgba(255,179,0,.85)' },
-        { main: '#a855f7', light: '#d8b4fe', dark: '#5b21b6', glow: 'rgba(168,85,247,.85)' },
+        { main: '#2ecc40', light: '#8df58a', dark: '#0f5c1e', glow: 'rgba(46,204,64,.85)' },   // verde
+        { main: '#ff3b30', light: '#ff9d97', dark: '#7a120c', glow: 'rgba(255,59,48,.85)' },   // vermelho
+        { main: '#ffcc00', light: '#ffe680', dark: '#7a5c00', glow: 'rgba(255,204,0,.85)' },   // amarelo
+        { main: '#2f7bff', light: '#8ab8ff', dark: '#123a80', glow: 'rgba(47,123,255,.85)' },  // azul
+        { main: '#ff8c1a', light: '#ffc180', dark: '#7a3d00', glow: 'rgba(255,140,26,.85)' },  // laranja
         { main: '#c026d3', light: '#f0abfc', dark: '#701a75', glow: 'rgba(192,38,211,.85)' },
         { main: '#8b5cf6', light: '#c4b5fd', dark: '#4c1d95', glow: 'rgba(139,92,246,.85)' },
         { main: '#94a3b8', light: '#e2e8f0', dark: '#475569', glow: 'rgba(148,163,184,.7)' }
@@ -158,6 +159,46 @@
       const MOONLIGHT_BARS = 78;          // compassos 2/2 mapeados (12 tercinas por compasso)
       const MICKEY_BPM = 170;             // eurobeat four-on-the-floor
       const MICKEY_BARS = 68;
+
+      // ---- Disco 1: Lendas do Rock (todos os tempos são estimativas calibráveis) ----
+      // Paint It, Black — The Rolling Stones (O4irXQhgMqg, ~3:44)
+      const PIB_BPM = 159, PIB_START_AT_SEC = 0, PIB_END_AT_SEC = 221;
+      const PIB_T_INTRO = 0.4, PIB_T_V1 = 11.2, PIB_T_V2 = 32.9, PIB_T_V3 = 56.5,
+            PIB_T_V4 = 78.2, PIB_T_V5 = 102.5, PIB_T_BRIDGE = 124.6,
+            PIB_T_V6 = 146.8, PIB_T_OUTRO = 168.9;
+
+      // Welcome to the Jungle — Guns N' Roses (o1tj2zJ2Wvg, ~4:33)
+      const JGL_BPM = 123, JGL_START_AT_SEC = 0, JGL_END_AT_SEC = 270;
+      const JGL_T_BUILD = 4.5, JGL_T_DRUMS = 24, JGL_T_RIFF = 33.5, JGL_T_V1 = 46.5,
+            JGL_T_CH1 = 70, JGL_T_V2 = 90, JGL_T_CH2 = 113.5, JGL_T_SOLO = 135,
+            JGL_T_V3 = 158, JGL_T_BREAK = 185, JGL_T_OUTRO = 205;
+
+      // One — Metallica (WM8bTdBs-cw, ~7:46; o clipe tem intro de filme de guerra ANTES da música)
+      const ONE_BPM_SLOW = 108, ONE_BPM_FAST = 212;  // 212 = feel double-time da seção "metralhadora"
+      const ONE_START_AT_SEC = 17;   // TUNÁVEL CRÍTICO: entrada do arpejo limpo no vídeo
+      const ONE_END_AT_SEC = 462;
+      // âncoras em segundos de CHART (relativos a ONE_START_AT_SEC):
+      const ONE_T_LEAD = 36, ONE_T_V1 = 80, ONE_T_CH1 = 112, ONE_T_V2 = 137,
+            ONE_T_CH2 = 180, ONE_T_HEAVY = 205, ONE_T_BRIDGE = 250,
+            ONE_T_GUNS = 272, ONE_T_SOLO = 330, ONE_T_OUTRO = 405;
+
+      // Knights of Cydonia — Muse (Q3Yc3HhSl1Q, ~6:07)
+      const KOC_BPM = 137, KOC_START_AT_SEC = 0, KOC_END_AT_SEC = 363;
+      const KOC_T_INTRO = 1.5, KOC_T_RIFF = 21, KOC_T_HORNS = 50, KOC_T_V1 = 80,
+            KOC_T_INST = 118, KOC_T_V2 = 147, KOC_T_BUILD = 185, KOC_T_QUIET = 232,
+            KOC_T_ACAP = 250, KOC_T_FINAL = 273;
+
+      // Through the Fire and Flames — DragonForce (0jgrCKhxE1s, ~7:22)
+      const TTF_BPM = 200, TTF_START_AT_SEC = 0, TTF_END_AT_SEC = 438;
+      const TTF_T_INTRO = 0.5, TTF_T_ISOLO = 14, TTF_T_RIFF = 45, TTF_T_V1 = 70,
+            TTF_T_PRE1 = 100, TTF_T_CH1 = 115, TTF_T_POST = 147, TTF_T_V2 = 163,
+            TTF_T_PRE2 = 193, TTF_T_CH2 = 208, TTF_T_SOLO = 240, TTF_T_BRIDGE = 355,
+            TTF_T_CH3 = 380, TTF_T_OUTRO = 420;
+
+      // Carrossel de discos
+      const DISC_ANIM_SEC = 0.35;
+      const DISC_SLIDE_PX = 560;
+      const VINYL_SPIN_RAD_S = 2.4;  // ~23 rpm visual — giro legível sem estroboscopia
 
       const SONGS = [
         {
@@ -201,8 +242,133 @@
           minAccuracy: 0.65,
           coverStyle: { bg1: '#3a0a12', bg2: '#c2183a', accent: '#ffd23b', motif: 'ears' },
           chartBuilder: buildMickeyChart
+        },
+        {
+          id: 'paintitblack',
+          title: 'PAINT IT, BLACK',
+          subtitle: 'SINGLE 1966',
+          panelTitle: ['PAINT IT,', 'BLACK'],
+          artist: 'THE ROLLING STONES',
+          genre: 'ROCK 60s',
+          genreColor: '#7a1f1f',
+          youtubeId: 'O4irXQhgMqg',
+          bpm: PIB_BPM,
+          gridBpm: PIB_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: PIB_START_AT_SEC,
+          endAtSec: PIB_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 3,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#0a0a0c', bg2: '#1c0d0f', accent: '#c22f2f', motif: 'blackdoor' },
+          chartBuilder: buildPaintItBlackChart
+        },
+        {
+          id: 'jungle',
+          title: 'WELCOME TO THE JUNGLE',
+          subtitle: 'APPETITE FOR DESTRUCTION',
+          panelTitle: ['WELCOME TO', 'THE JUNGLE'],
+          artist: "GUNS N' ROSES",
+          genre: 'HARD ROCK',
+          genreColor: '#2e7d32',
+          youtubeId: 'o1tj2zJ2Wvg',
+          bpm: JGL_BPM,
+          gridBpm: JGL_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: JGL_START_AT_SEC,
+          endAtSec: JGL_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 4,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#04150b', bg2: '#0d3b1e', accent: '#57e389', motif: 'jungle' },
+          chartBuilder: buildJungleChart
+        },
+        {
+          id: 'one',
+          title: 'ONE',
+          subtitle: '...AND JUSTICE FOR ALL',
+          panelTitle: ['ONE', ''],
+          artist: 'METALLICA',
+          genre: 'THRASH',
+          genreColor: '#4a4f57',
+          youtubeId: 'WM8bTdBs-cw',
+          bpm: ONE_BPM_SLOW,
+          gridBpm: ONE_BPM_SLOW,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: ONE_START_AT_SEC,
+          endAtSec: ONE_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 4,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#101214', bg2: '#23262b', accent: '#c9ced6', motif: 'one' },
+          chartBuilder: buildOneChart
+        },
+        {
+          id: 'cydonia',
+          title: 'KNIGHTS OF CYDONIA',
+          subtitle: 'BLACK HOLES & REVELATIONS',
+          panelTitle: ['KNIGHTS OF', 'CYDONIA'],
+          artist: 'MUSE',
+          genre: 'ROCK ESPACIAL',
+          genreColor: '#b26a2c',
+          youtubeId: 'Q3Yc3HhSl1Q',
+          bpm: KOC_BPM,
+          gridBpm: KOC_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: KOC_START_AT_SEC,
+          endAtSec: KOC_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 4,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#2b1130', bg2: '#c2571f', accent: '#ffd08a', motif: 'cydonia' },
+          chartBuilder: buildCydoniaChart
+        },
+        {
+          id: 'fireflames',
+          title: 'THROUGH THE FIRE AND FLAMES',
+          subtitle: 'INHUMAN RAMPAGE',
+          panelTitle: ['FIRE AND', 'FLAMES'],
+          artist: 'DRAGONFORCE',
+          genre: 'POWER METAL',
+          genreColor: '#c2331f',
+          youtubeId: '0jgrCKhxE1s',
+          bpm: TTF_BPM,
+          gridBpm: TTF_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: TTF_START_AT_SEC,
+          endAtSec: TTF_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 5,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#1a0402', bg2: '#7a1408', accent: '#ffb648', motif: 'fireflames' },
+          chartBuilder: buildTTFAFChart
         }
       ];
+
+      const DISCS = [
+        {
+          id: 'rock',
+          name: 'LENDAS DO ROCK',
+          accent: '#e6483f',
+          songIds: ['paintitblack', 'jungle', 'one', 'cydonia', 'fireflames']
+        },
+        {
+          id: 'piano',
+          name: 'PIANO & ARCADE',
+          accent: '#f2ad3b',
+          songIds: ['moonlight', 'mickey']
+        }
+      ];
+      const SONG_INDEX_BY_ID = {};
+      SONGS.forEach((s, i) => { SONG_INDEX_BY_ID[s.id] = i; });
+
+      function currentDisc() { return DISCS[state.discIndex]; }
+      function discSongs(disc) { return disc.songIds.map(id => SONGS[SONG_INDEX_BY_ID[id]]); }
 
       function currentSong() { return SONGS[state.songIndex]; }
       function songLength(song) { return song.endAtSec - song.startAtSec; }
@@ -232,7 +398,10 @@
       const state = {
         screen: 'title',
         songIndex: 0,
-        selectIndex: 0,
+        discIndex: 0,
+        selectIndex: 0,     // linha selecionada DENTRO do disco atual
+        rowByDisc: {},      // memória de linha por disco
+        discAnim: null,     // { from, to, dir, t0 } durante a transição do carrossel
         chart: [],
         chartCursor: 0,
         particles: [],
@@ -592,9 +761,11 @@
       }
 
       function chartBuilderApi(song, notes) {
-        const spb = 60 / song.gridBpm;
-        let shiftSec = 0;
-        const at = beat => beat * spb + shiftSec;
+        let spb = 60 / song.gridBpm;       // segundos por beat da seção atual
+        let barBeats = song.beatsPerBar;   // beats por compasso da seção atual
+        let originSec = 0;                 // âncora (segundos de chart) do beat 0 da seção
+        let shiftSec = 0;                  // micro-ajuste de rubato dentro da seção
+        const at = beat => originSec + beat * spb + shiftSec;
         return {
           tap(beat, lane) { notes.push(makeNote(at(beat), lane, 'tap', 0)); },
           hold(beat, lane, durBeats) { notes.push(makeNote(at(beat), lane, 'hold', durBeats * spb)); },
@@ -609,8 +780,17 @@
             }
             return b;
           },
-          shift(sec) { shiftSec += sec; }, // re-sync de rubato por seção
-          bar: n => n * song.beatsPerBar
+          // Re-ancora a origem do tempo: beats voltam a contar de 0 a partir de anchorSec.
+          // Zera o erro acumulado de BPM a cada seção — essencial em músicas de 6-7 min
+          // e em mudanças de andamento (One). Zera shiftSec: âncora absoluta não herda rubato.
+          section(anchorSec, bpm = song.gridBpm, beatsPerBar = song.beatsPerBar) {
+            originSec = anchorSec;
+            spb = 60 / bpm;
+            barBeats = beatsPerBar;
+            shiftSec = 0;
+          },
+          shift(sec) { shiftSec += sec; }, // re-sync de rubato local à seção
+          bar: n => n * barBeats
         };
       }
 
@@ -746,6 +926,474 @@
         return notes.sort((a, b2) => a.time - b2.time);
       }
 
+      // Paint It, Black — riff de cítara, versos alternando leve/pesado, galope de tom no fim.
+      function buildPaintItBlackChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verseLight(bars, holdBars, mirror) {
+          for (let i = 0; i < bars; i++) {
+            if (holdBars.indexOf(i) >= 0) {
+              c.tap(b(i), mirror ? 3 : 0);
+              c.hold(b(i) + 1, mirror ? 0 : 3, 2);
+              continue;
+            }
+            if (i % 2) c.pattern(b(i), mirror ? '3.1.' : '0.2.', 1);
+            else c.pattern(b(i), mirror ? '2.0.' : '1.3.', 1);
+            if (i === 3) c.pattern(b(i) + 2, mirror ? '3210' : '0123', 0.5);
+          }
+        }
+
+        function verseHeavy(bars, holdBar) {
+          for (let i = 0; i < bars; i++) {
+            if (i === holdBar) { c.tap(b(i), 1); c.hold(b(i) + 1, 3, 3); continue; }
+            if (i % 2 === 0) c.pattern(b(i), '00..22..', 0.5);
+            else c.pattern(b(i), '1.3.', 1);
+          }
+        }
+
+        // INTRO — riff de cítara sozinho, depois a banda entra
+        c.section(PIB_T_INTRO, PIB_BPM);
+        for (let i = 0; i < 7; i++) {
+          c.pattern(b(i), '2..1..0.', 0.5);
+          if (i >= 4) { c.tap(b(i), 0); c.tap(b(i) + 2, 3); }
+        }
+
+        c.section(PIB_T_V1, PIB_BPM);
+        c.boost(b(0), 0);
+        verseLight(14, [7, 11], false);
+
+        c.section(PIB_T_V2, PIB_BPM);
+        c.boost(b(0), 2);
+        verseHeavy(15, 13);
+
+        c.section(PIB_T_V3, PIB_BPM);
+        c.boost(b(0), 1);
+        verseLight(14, [7, 11], true);
+
+        c.section(PIB_T_V4, PIB_BPM);
+        c.boost(b(0), 3);
+        verseHeavy(15, 13);
+
+        c.section(PIB_T_V5, PIB_BPM);
+        c.boost(b(0), 0);
+        verseLight(14, [7], false);
+
+        // BRIDGE — vocalize e galope de tom
+        c.section(PIB_T_BRIDGE, PIB_BPM);
+        c.boost(b(0), 2);
+        for (let i = 0; i < 14; i++) {
+          if (i % 2 === 0) { c.pattern(b(i), '0.00', 0.5); c.pattern(b(i) + 2, '1.11', 0.5); }
+          else { c.tap(b(i), 2); c.hold(b(i) + 1, 3, 2); }
+        }
+
+        c.section(PIB_T_V6, PIB_BPM);
+        c.boost(b(0), 1);
+        verseHeavy(14, 13);
+
+        // OUTRO — galope com fade
+        c.section(PIB_T_OUTRO, PIB_BPM);
+        c.boost(b(0), 3);
+        c.boost(b(8), 1);
+        for (let i = 0; i < 8; i++) {
+          if (i % 2 === 0) { c.pattern(b(i), '0.00', 0.5); c.pattern(b(i) + 2, '1.11', 0.5); }
+          else { c.pattern(b(i), '2.22', 0.5); c.pattern(b(i) + 2, '3.33', 0.5); }
+        }
+        for (let i = 8; i < 20; i++) {
+          if (i === 18) { c.tap(b(i), 0); c.hold(b(i) + 1, 3, 4); continue; }
+          c.pattern(b(i), '0.2.', 1);
+        }
+        for (let i = 20; i < 28; i++) c.tap(b(i), i % 4);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Welcome to the Jungle — build de delay, riff, refrões "sha-na-na" e o breakdown.
+      function buildJungleChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verse(mirror) {
+          for (let i = 0; i < 12; i++) {
+            if (i === 10) { c.tap(b(i), mirror ? 2 : 1); c.hold(b(i), mirror ? 0 : 3, 2); continue; }
+            if (i % 2) c.pattern(b(i), mirror ? '3..2..1.' : '0..1..2.', 0.5);
+            else { c.pattern(b(i), mirror ? '2.0.' : '1.3.', 1); c.tap(b(i) + 1.5, mirror ? 0 : 3); }
+          }
+        }
+
+        function chorus(bars) {
+          for (let i = 0; i < bars; i++) {
+            if (i === 5 || i === 9) { c.tap(b(i), 0); c.tap(b(i) + 1, 2); c.hold(b(i) + 2, 3, 2); continue; }
+            if (i === 4 || i === 8) { c.pattern(b(i), '01230123', 0.5); continue; }
+            c.pattern(b(i), '0.2.1.3.', 0.5);
+          }
+        }
+
+        function solo(startBar, bars) {
+          for (let i = startBar; i < startBar + bars; i++) {
+            if (i - startBar === 9) { c.hold(b(i), 2, 3); continue; }
+            if (i % 2 === 0) c.pattern(b(i), '0123', 0.5);
+            else c.pattern(b(i) + 2, '3210', 0.5);
+          }
+        }
+
+        // BUILD — guitarra com delay
+        c.section(JGL_T_BUILD, JGL_BPM);
+        for (let i = 0; i < 6; i++) { c.tap(b(i), 3); c.tap(b(i) + 2, 2); }
+        for (let i = 6; i < 10; i++) c.pattern(b(i), '3.2.1.0.', 0.5);
+
+        // Bateria entra
+        c.section(JGL_T_DRUMS, JGL_BPM);
+        for (let i = 0; i < 5; i++) { c.pattern(b(i), '0..2', 1); c.tap(b(i) + 3.5, 1); }
+
+        // RIFF principal
+        c.section(JGL_T_RIFF, JGL_BPM);
+        c.boost(b(0), 3);
+        for (let i = 0; i < 6; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '00.11.22', 0.5);
+          else c.pattern(b(i), '0.2.1.3.', 0.5);
+        }
+
+        c.section(JGL_T_V1, JGL_BPM);
+        verse(false);
+
+        c.section(JGL_T_CH1, JGL_BPM);
+        c.boost(b(0), 2);
+        chorus(10);
+
+        c.section(JGL_T_V2, JGL_BPM);
+        verse(true);
+
+        c.section(JGL_T_CH2, JGL_BPM);
+        c.boost(b(0), 3);
+        chorus(10);
+
+        c.section(JGL_T_SOLO, JGL_BPM);
+        c.boost(b(0), 3);
+        solo(0, 11);
+
+        // V3 + esvaziamento
+        c.section(JGL_T_V3, JGL_BPM);
+        for (let i = 0; i < 9; i++) {
+          if (i % 2) c.pattern(b(i), '0..1..2.', 0.5);
+          else { c.pattern(b(i), '1.3.', 1); c.tap(b(i) + 1.5, 3); }
+        }
+        for (let i = 9; i < 13; i++) c.tap(b(i), 0);
+
+        // BREAK — "You know where you are?!"
+        c.section(JGL_T_BREAK, JGL_BPM);
+        for (let i = 0; i < 6; i++) c.tap(b(i), i % 4);
+        c.hold(b(6), 3, 4);
+        c.boost(b(8), 0);
+
+        // OUTRO — riff + solo final
+        c.section(JGL_T_OUTRO, JGL_BPM);
+        for (let i = 0; i < 16; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '00.11.22', 0.5);
+          else c.pattern(b(i), '0.2.1.3.', 0.5);
+        }
+        c.boost(b(16), 2);
+        solo(16, 10);
+        for (let i = 26; i < 29; i++) c.pattern(b(i), '0.1.2.3.', 0.5);
+        c.hold(b(29), 0, 4);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // One — arpejos limpos a 108 BPM; a seção "metralhadora" e os solos correm a 212 (multi-tempo).
+      function buildOneChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function slowVerse(anchor, bars, extraVoice) {
+          c.section(anchor, ONE_BPM_SLOW);
+          c.boost(b(0), 1);
+          for (let i = 0; i < bars; i++) {
+            if (i % 4 === 3) {
+              c.tap(b(i), 0); c.tap(b(i) + 1, 1); c.tap(b(i) + 2, 2);
+              c.pattern(b(i) + 3, '12', 0.5);
+              continue;
+            }
+            c.pattern(b(i), '0.1.2.1.', 0.5);
+            if (extraVoice && i % 2 === 0) c.tap(b(i) + 2.5, 3);
+          }
+        }
+
+        function slowChorus(anchor, boostBar) {
+          c.section(anchor, ONE_BPM_SLOW);
+          for (const i of [0, 4, 8]) c.hold(b(i), 3, 4);
+          for (const i of [1, 2, 3, 5, 6, 7, 9]) c.pattern(b(i), '0.2.', 1);
+          if (boostBar != null) c.boost(b(boostBar), 1);
+        }
+
+        // INTRO — arpejos esparsos (absorve o erro de ONE_START_AT_SEC)
+        c.section(0, ONE_BPM_SLOW);
+        for (let i = 0; i < 16; i += 2) c.pattern(b(i), '0.1.2.1.', 0.5);
+
+        // LEAD — melodia de guitarra sobre os arpejos
+        c.section(ONE_T_LEAD, ONE_BPM_SLOW);
+        for (let i = 0; i < 19; i++) {
+          if (i % 2 === 0) { c.tap(b(i), 0); c.tap(b(i) + 1.5, 1); c.tap(b(i) + 3, 2); continue; }
+          if (i === 7) { c.hold(b(i), 3, 3); continue; }
+          if (i === 15) { c.hold(b(i), 3, 4); continue; }
+          c.tap(b(i), 3); c.tap(b(i) + 2, 3);
+        }
+
+        slowVerse(ONE_T_V1, 14, false);
+        slowChorus(ONE_T_CH1, null);
+        slowVerse(ONE_T_V2, 18, true);
+        slowChorus(ONE_T_CH2, 1);
+
+        // HEAVY — a bateria dobra
+        c.section(ONE_T_HEAVY, ONE_BPM_SLOW);
+        c.boost(b(0), 1);
+        for (let i = 0; i < 20; i++) {
+          if (i === 18) { c.tap(b(i), 0); c.hold(b(i) + 1, 3, 4); continue; }
+          if (i === 19) continue;
+          c.pattern(b(i), '00.0', 0.5);
+          c.pattern(b(i) + 2, '2.3.', 0.5);
+        }
+
+        // BRIDGE — "the world is gone" (respiração antes da tempestade)
+        c.section(ONE_T_BRIDGE, ONE_BPM_SLOW);
+        for (let i = 1; i < 9; i += 2) {
+          if (i === 7) { c.hold(b(i), 3, 4); continue; }
+          c.pattern(b(i), '1.2.3.', 1);
+        }
+
+        // GUNS — metralhadora em double-time
+        c.section(ONE_T_GUNS, ONE_BPM_FAST);
+        c.boost(b(0), 3);
+        c.boost(b(16), 2);
+        for (let i = 0; i < 51; i++) {
+          if (i === 15 || i === 31 || i === 47) { c.pattern(b(i), '01010101', 0.5); continue; }
+          c.pattern(b(i), i % 2 === 0 ? '0101' : '2323', 1);
+        }
+
+        // SOLO rápido — ciclos de 8 compassos com respiro
+        c.section(ONE_T_SOLO, ONE_BPM_FAST);
+        for (let i = 0; i < 66; i++) {
+          const j = i % 8;
+          if (i % 24 === 0) c.boost(b(i), 3);
+          if (i % 16 === 15) { c.hold(b(i), 3, 2); continue; }
+          if (j < 4) c.pattern(b(i), '0123', 1);
+          else if (j < 6) c.pattern(b(i), '3210', 1);
+          else if (j === 6) c.pattern(b(i), '0123', 0.5);
+          else c.tap(b(i), 0);
+        }
+
+        // OUTRO — riff descendente e acorde final
+        c.section(ONE_T_OUTRO, ONE_BPM_FAST);
+        for (let i = 0; i < 24; i++) c.pattern(b(i), i % 2 === 0 ? '3210' : '2103', 1);
+        for (let i = 24; i < 30; i++) c.pattern(b(i), '0.2.', 1);
+        c.hold(b(30), 0, 6);
+        c.boost(b(30), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Knights of Cydonia — galopes, corais, o a cappella e o riff final famoso.
+      function buildCydoniaChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function gallopRiff(bars, low) {
+          const even = low ? '0.001.11' : '2.223.33';
+          const odd = low ? '0.0.1.1.' : '2.2.3.3.';
+          for (let i = 0; i < bars; i++) c.pattern(b(i), i % 2 === 0 ? even : odd, 0.5);
+        }
+
+        function verse(bars) {
+          for (let i = 0; i < bars; i++) {
+            if (i === 19) { c.tap(b(i), 1); c.hold(b(i) + 1, 3, 2); continue; }
+            c.pattern(b(i), '1..2..3.', 0.5);
+            if (i >= 12 && i % 2 === 0) c.pattern(b(i), '0.00', 0.5);
+          }
+          c.boost(b(12), 2);
+        }
+
+        // INTRO — galope de synth
+        c.section(KOC_T_INTRO, KOC_BPM);
+        for (let i = 0; i < 11; i++) {
+          if (i % 2 === 0) { c.pattern(b(i), '0.00', 0.5); c.pattern(b(i) + 2, '0.00', 0.5); }
+          else c.tap(b(i), 3);
+        }
+
+        c.section(KOC_T_RIFF, KOC_BPM);
+        c.boost(b(0), 3);
+        gallopRiff(16, true);
+
+        // HORNS — melodia dos metais
+        c.section(KOC_T_HORNS, KOC_BPM);
+        for (let i = 0; i < 17; i++) {
+          if (i % 2 === 0) { c.pattern(b(i), '0.00', 0.5); continue; }
+          if (i === 5 || i === 13) { c.tap(b(i), 2); c.hold(b(i), 3, 3); continue; }
+          c.pattern(b(i), '2.3.2.', 1);
+        }
+
+        c.section(KOC_T_V1, KOC_BPM);
+        verse(21);
+
+        c.section(KOC_T_INST, KOC_BPM);
+        gallopRiff(16, false);
+
+        c.section(KOC_T_V2, KOC_BPM);
+        verse(21);
+
+        // BUILD — arpejos e half-time pesado
+        c.section(KOC_T_BUILD, KOC_BPM);
+        for (let i = 0; i < 14; i++) c.pattern(b(i), '0123', 0.5);
+        c.boost(b(14), 3);
+        for (let i = 14; i < 26; i++) {
+          if (i % 2 === 0) c.hold(b(i), 0, 2);
+          else { c.tap(b(i), 2); c.tap(b(i) + 2, 3); }
+        }
+
+        // QUIET — "how can we win..."
+        c.section(KOC_T_QUIET, KOC_BPM);
+        for (let i = 0; i < 8; i++) c.tap(b(i), 1);
+
+        // A CAPPELLA — "No one's gonna take me alive"
+        c.section(KOC_T_ACAP, KOC_BPM);
+        for (let i = 0; i < 13; i++) {
+          if (i === 3 || i === 7 || i === 11) { c.hold(b(i), 3, 4); continue; }
+          if (i % 2 === 0) c.pattern(b(i), '1.2.1.21', 0.5);
+        }
+
+        // RIFF FINAL — o galope famoso
+        c.section(KOC_T_FINAL, KOC_BPM);
+        c.boost(b(0), 2);
+        c.boost(b(8), 3);
+        c.boost(b(16), 2);
+        c.boost(b(24), 1);
+        c.boost(b(32), 2);
+        for (let i = 0; i < 34; i++) {
+          if (i % 4 === 3) { c.pattern(b(i), '0.1.2.3.', 0.5); continue; }
+          c.pattern(b(i), i % 2 === 0 ? '0.001.11' : '2.223.33', 0.5);
+        }
+        c.pattern(b(34), '0123', 1);
+        c.pattern(b(35), '0123', 1);
+        c.hold(b(36), 0, 4);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Through the Fire and Flames — power metal a 200 BPM. Regra de sanidade: rajadas de
+      // colcheia nunca passam de 1 compasso e são sempre seguidas de compassos calmos.
+      function buildTTFAFChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function riff(anchor, bars) {
+          c.section(anchor, TTF_BPM);
+          for (let i = 0; i < bars; i++) {
+            c.pattern(b(i), '0.0.2.2.', 0.5);
+            if (i % 2 === 1) c.pattern(b(i) + 3, '01', 0.5);
+          }
+        }
+
+        function pre(anchor) {
+          c.section(anchor, TTF_BPM);
+          for (let i = 0; i < 12; i++) {
+            c.pattern(b(i), '0123', 1);
+            if (i >= 10) c.pattern(b(i) + 3, '01', 0.5);
+          }
+        }
+
+        function verse(anchor, mirror) {
+          c.section(anchor, TTF_BPM);
+          for (let i = 0; i < 24; i++) {
+            if (i === 11 || i === 23) {
+              c.tap(b(i), mirror ? 2 : 1);
+              c.hold(b(i) + 1, mirror ? 0 : 3, 2);
+              continue;
+            }
+            if (i % 2) c.pattern(b(i), mirror ? '2.1.0.' : '1.2.3.', 1);
+            else c.pattern(b(i), mirror ? '3.1.' : '0.2.', 1);
+          }
+        }
+
+        function chorus(anchor, bars, boosts) {
+          c.section(anchor, TTF_BPM);
+          for (let i = 0; i < bars; i++) {
+            if (i % 8 === 7) { c.pattern(b(i), '0.1.2.', 0.5); c.hold(b(i), 3, 3); continue; }
+            const boostLane = boosts[i];
+            if (boostLane != null) { c.boost(b(i), boostLane); c.pattern(b(i), '..1.2.3.', 0.5); }
+            else c.pattern(b(i), '0.1.2.3.', 0.5);
+            if (i % 2 === 0) c.tap(b(i) + 3.5, 1);
+          }
+        }
+
+        // INTRO
+        c.section(TTF_T_INTRO, TTF_BPM);
+        for (let i = 0; i < 6; i++) c.pattern(b(i), '0.2.', 1);
+        for (let i = 6; i < 11; i++) c.pattern(b(i), '0123', 1);
+
+        // SOLO DE INTRO — alt-picking
+        c.section(TTF_T_ISOLO, TTF_BPM);
+        c.boost(b(0), 3);
+        for (let i = 0; i < 25; i++) {
+          if (i % 4 === 3) { c.pattern(b(i), '0101', 0.5); c.pattern(b(i) + 2, '23', 1); continue; }
+          c.pattern(b(i), i % 2 === 0 ? '0123' : '3210', 1);
+        }
+
+        riff(TTF_T_RIFF, 20);
+        verse(TTF_T_V1, false);
+        pre(TTF_T_PRE1);
+        chorus(TTF_T_CH1, 26, { 0: 0, 12: 2 });
+        riff(TTF_T_POST, 13);
+        verse(TTF_T_V2, true);
+        pre(TTF_T_PRE2);
+        chorus(TTF_T_CH2, 26, { 0: 1 });
+
+        // SEÇÃO DE SOLOS (~2 min) — 11 blocos de 8 compassos com receitas cicladas
+        c.section(TTF_T_SOLO, TTF_BPM);
+        for (let i = 0; i < 88; i++) {
+          const block = Math.floor(i / 8);
+          const j = i % 8;
+          if (j === 0 && (block === 0 || block === 4 || block === 8)) c.boost(b(i), 3);
+          const recipe = block % 5;
+          if (recipe === 3) { // bloco-respiro com holds
+            if (j === 0 || j === 4) { c.hold(b(i), 2, 3); continue; }
+            c.tap(b(i), 0); c.tap(b(i) + 2, 1);
+            continue;
+          }
+          if ((block === 5 || block === 10) && j === 7) { c.pattern(b(i), '01230123', 0.5); continue; }
+          if (recipe === 0) c.pattern(b(i), '0123', 1);
+          else if (recipe === 1) c.pattern(b(i), '3210', 1);
+          else if (recipe === 2) {
+            if (j % 2 === 0) c.pattern(b(i), '0101', 0.5);
+            else c.pattern(b(i) + 2, '2323', 0.5);
+          }
+          else c.pattern(b(i), '0213', 1);
+        }
+        for (let i = 88; i < 93; i++) c.pattern(b(i), '0.2.', 1);
+
+        // BRIDGE melódica — recuperação longa em holds
+        c.section(TTF_T_BRIDGE, TTF_BPM);
+        const bridgeLanes = [3, 0, 2, 1];
+        for (let p = 0; p < 10; p++) {
+          const lane = bridgeLanes[p % 4];
+          c.hold(b(p * 2), lane, 4);
+          if (p < 9) c.tap(b(p * 2 + 1) + 2, (lane + 2) % 4);
+        }
+
+        chorus(TTF_T_CH3, 32, { 0: 3, 16: 0 });
+
+        // OUTRO
+        c.section(TTF_T_OUTRO, TTF_BPM);
+        for (let i = 0; i < 8; i++) c.pattern(b(i), '3210', 1);
+        c.hold(b(8), 0, 8);
+        c.boost(b(8), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
       function buildRuntimeChart(rawNotes) {
         return rawNotes.map(raw => {
           const type = raw.type || 'tap';
@@ -766,10 +1414,150 @@
         });
       }
 
+      // ---------- Charts externos em JSON ----------
+      // Cada música pode ser configurada por charts/<id>.json com o link do YouTube,
+      // as notas ([t, pista], [t, pista, "h", duração] ou [t, pista, "b"]) e o tempo.
+      // O arquivo, quando existe, tem prioridade sobre o chart embutido no código.
+
+      function parseYoutubeId(url) {
+        const m = /(?:youtube\.com\/.*[?&]v=|youtu\.be\/)([\w-]{11})/.exec(url || '');
+        return m ? m[1] : null;
+      }
+
+      function notesFromCompact(arr) {
+        return arr.map(n => ({
+          time: n[0],
+          lane: n[1],
+          type: n[2] === 'h' ? 'hold' : n[2] === 'b' ? 'boost' : 'tap',
+          duration: n[2] === 'h' ? (n[3] || HOLD_MIN_DURATION) : 0
+        }));
+      }
+
+      function notesToCompact(rawNotes) {
+        return rawNotes.map(n => {
+          const t = +n.time.toFixed(3);
+          if (n.type === 'hold') return [t, n.lane, 'h', +(n.duration || 0).toFixed(3)];
+          if (n.type === 'boost') return [t, n.lane, 'b'];
+          return [t, n.lane];
+        });
+      }
+
+      // Notas autoradas da música: JSON externo (se carregado) ou builder embutido
+      function songChartSource(song) {
+        return song.externalNotes ? notesFromCompact(song.externalNotes) : song.chartBuilder(song);
+      }
+
+      function loadExternalCharts() {
+        if (location.protocol === 'file:') return; // fetch local exige http(s)
+        SONGS.forEach(song => {
+          fetch('charts/' + song.id + '.json')
+            .then(r => (r.ok ? r.json() : null))
+            .then(data => {
+              if (!data || !Array.isArray(data.notes) || !data.notes.length) return;
+              song.externalNotes = data.notes;
+              const ytId = parseYoutubeId(data.youtube);
+              if (ytId) song.youtubeId = ytId;
+              for (const k of ['bpm', 'offsetMs', 'startAtSec', 'endAtSec', 'difficulty', 'minAccuracy']) {
+                if (typeof data[k] === 'number') song[k] = data[k];
+              }
+              if (Array.isArray(data.keys) && data.keys.length >= 4) song.keys = data.keys.slice(0, 8);
+            })
+            .catch(() => {});
+        });
+      }
+
+      function songToJson(song) {
+        const meta = {
+          id: song.id,
+          title: song.title,
+          subtitle: song.subtitle,
+          artist: song.artist,
+          genre: song.genre,
+          genreColor: song.genreColor,
+          youtube: 'https://www.youtube.com/watch?v=' + song.youtubeId,
+          bpm: song.bpm,
+          offsetMs: song.offsetMs + (readCalib(song.id) || 0), // exporta com a calibração ao vivo
+          startAtSec: song.startAtSec,
+          endAtSec: song.endAtSec,
+          keys: song.keys,
+          difficulty: song.difficulty,
+          minAccuracy: song.minAccuracy
+        };
+        const notes = notesToCompact(songChartSource(song));
+        return JSON.stringify(meta, null, 2).replace(/\n\}$/, ',\n  "notes": [\n    ' +
+          notes.map(n => JSON.stringify(n)).join(',\n    ') + '\n  ]\n}');
+      }
+
+      function exportSongJson(song) {
+        const blob = new Blob([songToJson(song)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = song.id + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        showToast(`Chart exportado: ${song.id}.json`);
+      }
+
       // ==================== Ciclo de vida da partida ====================
+
+      function selectedSong() {
+        return discSongs(currentDisc())[state.selectIndex];
+      }
+
+      // Aterrissa a seleção no disco/linha da música dada (Q do pause, ESC do result, erro do yt)
+      function landOnSong(songId) {
+        const d = DISCS.findIndex(disc => disc.songIds.indexOf(songId) >= 0);
+        if (d >= 0) {
+          state.discIndex = d;
+          state.selectIndex = DISCS[d].songIds.indexOf(songId);
+          state.discAnim = null;
+        }
+      }
+
+      function saveLastSelection() {
+        try {
+          localStorage.setItem('pianoHero.lastDisc', currentDisc().id);
+          localStorage.setItem('pianoHero.lastSong', currentDisc().songIds[state.selectIndex]);
+        } catch (_) {}
+      }
+
+      function restoreLastSelection() {
+        try {
+          const song = localStorage.getItem('pianoHero.lastSong');
+          if (song && SONG_INDEX_BY_ID[song] != null) landOnSong(song);
+        } catch (_) {}
+      }
+
+      function switchDisc(dir) {
+        if (state.discAnim) return; // sem fila: 0,35s é curto
+        state.rowByDisc[currentDisc().id] = state.selectIndex;
+        const to = (state.discIndex + dir + DISCS.length) % DISCS.length;
+        state.discAnim = { from: state.discIndex, to, dir, t0: nowSec() };
+        state.discIndex = to;
+        const remembered = state.rowByDisc[DISCS[to].id] || 0;
+        state.selectIndex = Math.min(remembered, DISCS[to].songIds.length - 1);
+        saveLastSelection();
+        srStatus.textContent = `Disco ${to + 1} de ${DISCS.length}: ${DISCS[to].name}. ${DISCS[to].songIds.length} músicas. Use cima e baixo para escolher.`;
+      }
+
+      function moveRow(dir) {
+        const max = currentDisc().songIds.length - 1;
+        state.selectIndex = clamp(state.selectIndex + dir, 0, max);
+        state.rowByDisc[currentDisc().id] = state.selectIndex;
+        saveLastSelection();
+        const song = selectedSong();
+        srStatus.textContent = `${song.title}, ${song.artist}. Dificuldade ${song.difficulty} de 5.`;
+      }
+
+      function startSelectedSong() {
+        startSong(SONG_INDEX_BY_ID[currentDisc().songIds[state.selectIndex]]);
+      }
 
       function toSongSelect() {
         yt.pause();
+        landOnSong(currentSong().id);
         state.screen = 'songSelect';
         srStatus.textContent = 'Seleção de músicas.';
       }
@@ -787,10 +1575,11 @@
         }
         setupAudio();
         state.songIndex = index;
-        state.selectIndex = index;
+        landOnSong(song.id);
+        saveLastSelection();
         state.highScore = readHighScore(song.id);
         state.calibMs = readCalib(song.id);
-        state.chart = buildRuntimeChart(song.chartBuilder(song));
+        state.chart = buildRuntimeChart(songChartSource(song));
         state.chartCursor = 0;
         state.particles = [];
         state.floatingTexts = [];
@@ -1537,6 +2326,12 @@
 
       // ---------- Seleção de música (estilo Guitar Hero) ----------
 
+      function coverSeed(songId) {
+        let h = 7;
+        for (const ch of songId) h = (h * 31 + ch.charCodeAt(0)) | 0;
+        return seededRandom(h >>> 0);
+      }
+
       function drawCover(x, y, w, h, style, songId) {
         const g = ctx.createLinearGradient(x, y, x + w, y + h);
         g.addColorStop(0, style.bg1);
@@ -1545,8 +2340,126 @@
         ctx.save();
         roundRectPath(ctx, x, y, w, h, 6);
         ctx.clip();
-        const seed = seededRandom(songId === 'moonlight' ? 777001 : 424242);
-        if (style.motif === 'moon') {
+        const seed = coverSeed(songId);
+        if (style.motif === 'blackdoor') {
+          // vinheta lateral
+          ctx.fillStyle = 'rgba(0,0,0,.5)';
+          ctx.fillRect(x, y, w * 0.16, h);
+          ctx.fillRect(x + w * 0.84, y, w * 0.16, h);
+          // porta vermelha
+          fillRoundRect(x + w * 0.3, y + h * 0.18, w * 0.4, h * 0.82, 4, style.accent);
+          ctx.fillStyle = style.bg1;
+          ctx.fillRect(x + w * 0.36, y + h * 0.26, w * 0.28, h * 0.26);
+          ctx.fillRect(x + w * 0.36, y + h * 0.58, w * 0.28, h * 0.3);
+          ctx.fillStyle = '#f2eee5';
+          ctx.beginPath(); ctx.arc(x + w * 0.65, y + h * 0.55, Math.max(1.5, w * 0.02), 0, TWO_PI); ctx.fill();
+        } else if (style.motif === 'jungle') {
+          // folhas em arcos grossos saindo dos cantos inferiores
+          ctx.lineCap = 'round';
+          for (let i = 0; i < 6; i++) {
+            ctx.strokeStyle = style.accent;
+            ctx.globalAlpha = 0.3 + seed() * 0.5;
+            ctx.lineWidth = Math.max(3, w * (0.04 + seed() * 0.03));
+            const fromLeft = i % 2 === 0;
+            const bx = fromLeft ? x - w * 0.05 : x + w * 1.05;
+            const tipX = x + w * (0.25 + seed() * 0.5);
+            const tipY = y + h * (0.15 + seed() * 0.45);
+            ctx.beginPath();
+            ctx.moveTo(bx, y + h * 1.02);
+            ctx.quadraticCurveTo(fromLeft ? x + w * 0.15 : x + w * 0.85, y + h * 0.65, tipX, tipY);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          // letreiro neon
+          ctx.save();
+          ctx.shadowColor = style.accent;
+          ctx.shadowBlur = 8;
+          strokeRoundRect(x + w * 0.28, y + h * 0.3, w * 0.44, h * 0.18, 4, style.accent, Math.max(1.5, w * 0.015));
+          ctx.restore();
+        } else if (style.motif === 'one') {
+          // arame farpado
+          ctx.strokeStyle = style.accent;
+          ctx.lineWidth = Math.max(1.5, w * 0.012);
+          for (const fy of [0.35, 0.6]) {
+            const yy = y + h * fy;
+            ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x + w, yy); ctx.stroke();
+            for (let i = 1; i < 6; i++) {
+              const xx = x + (w / 6) * i;
+              const s = Math.max(2.5, w * 0.025);
+              ctx.beginPath();
+              ctx.moveTo(xx - s, yy - s); ctx.lineTo(xx + s, yy + s);
+              ctx.moveTo(xx + s, yy - s); ctx.lineTo(xx - s, yy + s);
+              ctx.stroke();
+            }
+          }
+          // dog tags
+          ctx.save();
+          ctx.translate(x + w * 0.5, y + h * 0.8);
+          ctx.rotate(-0.12);
+          fillRoundRect(-w * 0.11, -h * 0.09, w * 0.14, h * 0.18, w * 0.04, '#b9bfc9');
+          ctx.rotate(0.22);
+          fillRoundRect(-w * 0.02, -h * 0.1, w * 0.14, h * 0.18, w * 0.04, '#8f959e');
+          ctx.restore();
+        } else if (style.motif === 'cydonia') {
+          // sol
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = style.accent;
+          ctx.beginPath(); ctx.arc(x + w * 0.5, y + h * 0.42, w * 0.28, 0, TWO_PI); ctx.fill();
+          ctx.globalAlpha = 1;
+          // horizonte
+          ctx.fillStyle = '#140a08';
+          ctx.fillRect(x, y + h * 0.68, w, h * 0.32);
+          // cavaleiro (silhueta mínima)
+          ctx.fillStyle = '#0b0705';
+          const cx = x + w * 0.5, hy = y + h * 0.68;
+          ctx.beginPath(); ctx.ellipse(cx, hy - h * 0.055, w * 0.1, h * 0.045, 0, 0, TWO_PI); ctx.fill();
+          ctx.lineWidth = Math.max(1.5, w * 0.015);
+          ctx.strokeStyle = '#0b0705';
+          for (const dx of [-0.07, -0.03, 0.03, 0.07]) {
+            ctx.beginPath(); ctx.moveTo(cx + w * dx, hy - h * 0.03); ctx.lineTo(cx + w * (dx + 0.015), hy); ctx.stroke();
+          }
+          ctx.beginPath();
+          ctx.moveTo(cx - w * 0.01, hy - h * 0.09);
+          ctx.lineTo(cx + w * 0.05, hy - h * 0.19);
+          ctx.lineTo(cx + w * 0.07, hy - h * 0.08);
+          ctx.closePath(); ctx.fill();
+        } else if (style.motif === 'fireflames') {
+          // camadas de chamas
+          const layers = [
+            { top: 0.75, alpha: 0.85, color: style.accent },
+            { top: 0.6, alpha: 0.55, color: style.accent },
+            { top: 0.45, alpha: 0.35, color: style.accent }
+          ];
+          for (const L of layers) {
+            ctx.globalAlpha = L.alpha;
+            ctx.fillStyle = L.color;
+            ctx.beginPath();
+            ctx.moveTo(x, y + h);
+            for (let i = 0; i <= 6; i++) {
+              const px = x + (w / 6) * i;
+              const peak = y + h * (L.top - (i % 2 === 0 ? 0 : 0.12) - seed() * 0.06);
+              ctx.quadraticCurveTo(px - w / 12, y + h * (L.top + 0.12), px, peak);
+            }
+            ctx.lineTo(x + w, y + h);
+            ctx.closePath();
+            ctx.fill();
+          }
+          // núcleo quente
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = '#fff3d0';
+          ctx.beginPath();
+          ctx.moveTo(x + w * 0.3, y + h);
+          ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.72, x + w * 0.7, y + h);
+          ctx.closePath(); ctx.fill();
+          ctx.globalAlpha = 1;
+          // faíscas
+          ctx.fillStyle = '#ffd9a0';
+          for (let i = 0; i < 8; i++) {
+            ctx.globalAlpha = 0.4 + seed() * 0.5;
+            ctx.beginPath(); ctx.arc(x + seed() * w, y + h * (0.1 + seed() * 0.5), 0.8 + seed() * 1.4, 0, TWO_PI); ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        } else if (style.motif === 'moon') {
           ctx.fillStyle = style.accent;
           ctx.globalAlpha = 0.85;
           ctx.beginPath(); ctx.arc(x + w * 0.68, y + h * 0.32, w * 0.2, 0, TWO_PI); ctx.fill();
@@ -1599,126 +2512,175 @@
         }
       }
 
+      // Vinil girando — a parte central roda; o brilho (reflexo de luz) fica fixo
+      function drawVinyl(cx, cy, r, accent) {
+        const angle = nowSec() * VINYL_SPIN_RAD_S;
+        ctx.save();
+        const g = ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, r);
+        g.addColorStop(0, '#16161a');
+        g.addColorStop(1, '#050506');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, TWO_PI); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.18)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,.045)';
+        ctx.lineWidth = 1;
+        for (let gr = r * 0.42; gr < r * 0.94; gr += 6) {
+          ctx.beginPath(); ctx.arc(cx, cy, gr, 0, TWO_PI); ctx.stroke();
+        }
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.strokeStyle = 'rgba(255,255,255,.08)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(0, -r * 0.44); ctx.lineTo(0, -r * 0.9); ctx.stroke();
+        ctx.fillStyle = accent;
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.33, 0, TWO_PI); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.26, 0, TWO_PI); ctx.stroke();
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = '#f2eee5';
+        ctx.fillRect(-2, -r * 0.28, 4, r * 0.1);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(0,0,0,.5)';
+        ctx.beginPath(); ctx.arc(0, r * 0.2, 2.5, 0, TWO_PI); ctx.fill();
+        ctx.rotate(-angle);
+        ctx.fillStyle = 'rgba(255,255,255,.05)';
+        for (const a0 of [-0.5, Math.PI - 0.5]) {
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, r * 0.97, a0, a0 + 0.35);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.fillStyle = '#0b0b0d';
+        ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, TWO_PI); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.35)';
+        ctx.beginPath(); ctx.arc(-1, -1, 1.5, 0, TWO_PI); ctx.fill();
+        ctx.restore();
+      }
+
+      // Unidade do carrossel: vinil atrás + capa (da música selecionada) + nome do disco
+      function drawDiscUnit(disc, cx, alpha, rowIndex) {
+        const songs = discSongs(disc);
+        const song = songs[clamp(rowIndex, 0, songs.length - 1)];
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        drawVinyl(cx + 35, 282, 88, disc.accent);
+        drawCover(cx - 190, 187, 190, 190, song.coverStyle, song.id);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = '#f2eee5';
+        ctx.font = '900 36px Arial Black, sans-serif';
+        ctx.fillText(disc.name, cx, 415);
+        fillRoundRect(cx - 90, 428, 180, 4, 2, disc.accent);
+        ctx.fillStyle = 'rgba(255,255,255,.55)';
+        ctx.font = '700 13px Arial, sans-serif';
+        ctx.fillText(`DISCO ${DISCS.indexOf(disc) + 1} DE ${DISCS.length}  •  ${songs.length} MÚSICAS`, cx, 452);
+        ctx.restore();
+      }
+
       function drawSongSelect() {
         drawLogo(800, 26, 0.6);
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = '#f4f0e8';
-        ctx.font = '900 34px Arial Black, sans-serif';
-        ctx.fillText('ESCOLHA SUA MÚSICA', 800, 172);
-        ctx.fillStyle = 'rgba(255,255,255,.62)';
-        ctx.font = '600 15px Arial, sans-serif';
-        ctx.fillText('A música toca direto do YouTube. As notas caem no ritmo do vídeo.', 800, 200);
+        ctx.fillStyle = 'rgba(255,255,255,.55)';
+        ctx.font = '600 14px Arial, sans-serif';
+        ctx.fillText('ESCOLHA SEU DISCO', 800, 150);
 
-        // Painel da lista
-        fillRoundRect(110, 225, 800, 545, 24, 'rgba(9,12,13,.86)');
-        strokeRoundRect(110, 225, 800, 545, 24, 'rgba(255,255,255,.14)', 2);
+        // Carrossel com transição de troca de disco
+        const anim = state.discAnim;
+        let animP = 1;
+        if (anim) {
+          animP = clamp((nowSec() - anim.t0) / DISC_ANIM_SEC, 0, 1);
+          if (animP >= 1) {
+            state.discAnim = null;
+            drawDiscUnit(currentDisc(), 800, 1, state.selectIndex);
+          } else {
+            const e = easeOutCubic(animP);
+            const fromRow = state.rowByDisc[DISCS[anim.from].id] || 0;
+            drawDiscUnit(DISCS[anim.from], 800 - anim.dir * e * DISC_SLIDE_PX, 1 - animP, fromRow);
+            drawDiscUnit(DISCS[anim.to], 800 + anim.dir * (1 - e) * DISC_SLIDE_PX, animP, state.selectIndex);
+          }
+        } else {
+          drawDiscUnit(currentDisc(), 800, 1, state.selectIndex);
+        }
 
-        SONGS.forEach((song, i) => {
-          const y = 260 + i * 150;
+        // Setas ‹ ›
+        for (const [id, x, glyph] of [['disc-prev', 400, '‹'], ['disc-next', 1124, '›']]) {
+          uiButton(id, x, 240, 76, 120);
+          const hover = state.hoverTarget === id;
+          if (hover) strokeRoundRect(x, 240, 76, 120, 14, '#f1ad3b', 2);
+          ctx.fillStyle = hover ? '#f2ad3b' : 'rgba(242,238,229,.55)';
+          ctx.font = '900 64px Arial Black, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(glyph, x + 38, 322);
+        }
+
+        // Page dots
+        DISCS.forEach((d, i) => {
+          const dotX = 800 + (i - (DISCS.length - 1) / 2) * 24;
+          uiButton(`disc-dot-${i}`, dotX - 12, 466, 24, 24);
+          ctx.fillStyle = i === state.discIndex ? currentDisc().accent : 'rgba(255,255,255,.25)';
+          ctx.beginPath(); ctx.arc(dotX, 478, 5, 0, TWO_PI); ctx.fill();
+        });
+
+        // Lista de músicas do disco atual
+        ctx.save();
+        ctx.globalAlpha = anim ? 0.35 + 0.65 * animP : 1;
+        fillRoundRect(300, 495, 1000, 315, 20, 'rgba(9,12,13,.86)');
+        strokeRoundRect(300, 495, 1000, 315, 20, 'rgba(255,255,255,.14)', 2);
+        const songs = discSongs(currentDisc());
+        songs.forEach((song, i) => {
+          const rowY = 508 + i * 60;
           const selected = state.selectIndex === i;
           const hover = state.hoverTarget === `song-${i}`;
           const blocked = !!yt.blocked[song.id];
-          uiButton(`song-${i}`, 140, y, 740, 132);
-          fillRoundRect(140, y, 740, 132, 18, selected ? 'rgba(236,169,57,.17)' : hover ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.035)');
-          strokeRoundRect(140, y, 740, 132, 18, blocked ? 'rgba(228,84,96,.5)' : selected ? '#f1ad3b' : 'rgba(255,255,255,.13)', selected ? 3 : 1.5);
-
-          drawCover(156, y + 16, 100, 100, song.coverStyle, song.id);
-
+          uiButton(`song-${i}`, 322, rowY, 956, 54);
+          fillRoundRect(322, rowY, 956, 54, 10, selected ? 'rgba(236,169,57,.17)' : hover ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.035)');
+          strokeRoundRect(322, rowY, 956, 54, 10, blocked ? 'rgba(228,84,96,.5)' : selected ? '#f1ad3b' : 'rgba(255,255,255,.13)', selected ? 3 : 1.5);
+          drawCover(332, rowY + 5, 44, 44, song.coverStyle, song.id);
           ctx.textAlign = 'left';
           ctx.fillStyle = selected ? '#f6b64a' : '#f2f0ea';
-          ctx.font = '900 30px Arial Black, sans-serif';
-          ctx.fillText(song.title, 280, y + 48);
-          ctx.fillStyle = selected ? '#fff0c9' : 'rgba(255,255,255,.66)';
-          ctx.font = '800 15px Arial, sans-serif';
-          ctx.fillText(`${song.subtitle}  ·  ${song.artist}`, 280, y + 76);
-
+          ctx.font = '900 19px Arial Black, sans-serif';
+          ctx.fillText(song.title, 392, rowY + 25);
+          ctx.fillStyle = 'rgba(255,255,255,.6)';
+          ctx.font = '800 11px Arial, sans-serif';
+          ctx.fillText(`${song.artist}  ·  ${song.subtitle}`, 392, rowY + 44);
           ctx.fillStyle = 'rgba(255,255,255,.5)';
-          ctx.font = '700 14px Arial, sans-serif';
-          ctx.fillText(formatTime(songLength(song)), 280, y + 110);
-          ctx.fillText(`${song.bpm} BPM`, 380, y + 110);
-          drawDifficultyDots(490, y + 105, song.difficulty, 20, 6);
-
+          ctx.font = '700 13px Arial, sans-serif';
+          ctx.fillText(formatTime(songLength(song)), 905, rowY + 33);
+          ctx.fillText(`${song.bpm} BPM`, 985, rowY + 33);
+          drawDifficultyDots(1093, rowY + 28, song.difficulty, 15, 4.5);
+          ctx.textAlign = 'right';
           if (blocked) {
-            ctx.textAlign = 'right';
             ctx.fillStyle = '#e45460';
+            ctx.font = '900 13px Arial Black, sans-serif';
+            ctx.fillText('⚠ INDISPONÍVEL', 1262, rowY + 33);
+          } else {
+            const hs = readHighScore(song.id);
+            ctx.fillStyle = hs > 0 ? '#f3ae3a' : 'rgba(255,255,255,.35)';
             ctx.font = '900 15px Arial Black, sans-serif';
-            ctx.fillText('⚠ INDISPONÍVEL', 856, y + 66);
+            ctx.fillText(hs > 0 ? `★ ${formatScore(hs)}` : '—', 1262, rowY + 33);
           }
         });
+        ctx.restore();
 
-        // Painel de prévia
-        fillRoundRect(940, 225, 550, 545, 24, 'rgba(9,12,13,.86)');
-        strokeRoundRect(940, 225, 550, 545, 24, 'rgba(255,255,255,.14)', 2);
-
-        const song = SONGS[state.selectIndex];
-        const blocked = !!yt.blocked[song.id];
-
-        drawCover(1090, 250, 250, 250, song.coverStyle, song.id);
-
+        // Exportar JSON da música selecionada
+        uiButton('song-export', 1120, 818, 180, 30);
+        const exHover = state.hoverTarget === 'song-export';
+        fillRoundRect(1120, 818, 180, 30, 8, exHover ? 'rgba(236,169,57,.22)' : 'rgba(255,255,255,.05)');
+        strokeRoundRect(1120, 818, 180, 30, 8, exHover ? '#f1ad3b' : 'rgba(255,255,255,.2)', 1.5);
+        ctx.fillStyle = exHover ? '#f2ad3b' : 'rgba(255,255,255,.6)';
+        ctx.font = '800 13px Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#f4f0e8';
-        ctx.font = '900 28px Arial Black, sans-serif';
-        ctx.fillText(song.title, 1215, 545);
-        ctx.fillStyle = 'rgba(255,255,255,.66)';
-        ctx.font = '800 15px Arial, sans-serif';
-        ctx.fillText(`${song.subtitle}  ·  ${song.artist}`, 1215, 574);
-
-        ctx.textAlign = 'left';
-        ctx.fillStyle = 'rgba(255,255,255,.55)';
-        ctx.font = '800 12px Arial, sans-serif';
-        ctx.fillText('DURAÇÃO', 990, 608);
-        ctx.fillText('BPM', 1250, 608);
-        ctx.fillText('DIFICULDADE', 990, 662);
-        ctx.fillText('RECORDE', 1250, 662);
-        ctx.fillStyle = '#f4f0e8';
-        ctx.font = '900 24px Arial Black, sans-serif';
-        ctx.fillText(formatTime(songLength(song)), 990, 636);
-        ctx.fillText(String(song.bpm), 1250, 636);
-        drawDifficultyDots(1000, 684, song.difficulty, 22, 7);
-        ctx.fillStyle = '#f3ae3a';
-        ctx.fillText(formatScore(readHighScore(song.id)), 1250, 690);
-
-        const savedOffset = readCalib(song.id);
-        if (savedOffset !== 0) {
-          ctx.textAlign = 'center';
-          ctx.fillStyle = 'rgba(255,255,255,.45)';
-          ctx.font = '700 12px Arial, sans-serif';
-          ctx.fillText(`OFFSET SALVO: ${savedOffset > 0 ? '+' : ''}${savedOffset} ms`, 1215, 700);
-        }
-
-        // Botão tocar
-        uiButton('song-play', 990, 708, 450, 54);
-        const playHover = state.hoverTarget === 'song-play';
-        ctx.textAlign = 'center';
-        if (blocked) {
-          fillRoundRect(990, 708, 450, 54, 14, 'rgba(228,84,96,.15)');
-          strokeRoundRect(990, 708, 450, 54, 14, '#e45460', 2);
-          ctx.fillStyle = '#e45460';
-          ctx.font = '900 18px Arial Black, sans-serif';
-          ctx.fillText('VÍDEO INDISPONÍVEL', 1215, 742);
-        } else if (!yt.ready) {
-          fillRoundRect(990, 708, 450, 54, 14, 'rgba(239,168,58,.35)');
-          ctx.fillStyle = '#181713';
-          ctx.font = '900 18px Arial Black, sans-serif';
-          ctx.fillText('CARREGANDO ÁUDIO…', 1215, 742);
-        } else {
-          fillRoundRect(990, 708, 450, 54, 14, playHover ? '#ffc45b' : '#efa83a');
-          ctx.fillStyle = '#181713';
-          ctx.font = '900 20px Arial Black, sans-serif';
-          ctx.fillText('TOCAR  [ENTER]', 1215, 742);
-        }
-
-        if (blocked) {
-          ctx.fillStyle = '#e45460';
-          ctx.font = '700 13px Arial, sans-serif';
-          ctx.fillText('ESTE VÍDEO NÃO PERMITE REPRODUÇÃO INCORPORADA', 1215, 244);
-        }
+        ctx.fillText('⤓ EXPORTAR JSON', 1210, 838);
 
         ctx.fillStyle = 'rgba(255,255,255,.52)';
         ctx.font = '600 14px Arial, sans-serif';
-        ctx.fillText('↑ ↓ ou W S para navegar  •  ENTER para tocar  •  ESC para voltar', 800, 845);
+        ctx.fillText('‹ › trocar de disco  •  ↑ ↓ escolher música  •  ENTER tocar  •  ESC voltar', 760, 845);
       }
 
       // ---------- Cena de jogo ----------
@@ -2371,17 +3333,27 @@
           srStatus.textContent = 'Seleção de músicas. Use as setas e Enter.';
           return;
         }
-        if (target.indexOf('song-') === 0 && target !== 'song-play') {
+        if (target === 'disc-prev') { switchDisc(-1); return; }
+        if (target === 'disc-next') { switchDisc(1); return; }
+        if (target.indexOf('disc-dot-') === 0) {
+          const i = Number(target.slice(9));
+          if (i !== state.discIndex) switchDisc(i > state.discIndex ? 1 : -1);
+          return;
+        }
+        if (target === 'song-export') { exportSongJson(selectedSong()); return; }
+        if (target.indexOf('song-') === 0) {
           const i = Number(target.slice(5));
-          if (state.selectIndex === i) startSong(i);
+          if (state.selectIndex === i) startSelectedSong();
           else {
             state.selectIndex = i;
-            srStatus.textContent = `${SONGS[i].title}, ${SONGS[i].artist}.`;
+            state.rowByDisc[currentDisc().id] = i;
+            saveLastSelection();
+            const song = selectedSong();
+            srStatus.textContent = `${song.title}, ${song.artist}.`;
           }
           return;
         }
-        if (target === 'song-play') startSong(state.selectIndex);
-        else if (target === 'replay') startSong(state.songIndex);
+        if (target === 'replay') startSong(state.songIndex);
         else if (target === 'result-back') toSongSelect();
         else if (target === 'resume') pauseGame();
         else if (target === 'pause-quit') toSongSelect();
@@ -2403,15 +3375,11 @@
         }
 
         if (state.screen === 'songSelect') {
-          if (e.key === 'ArrowUp' || key === 'W') {
-            state.selectIndex = Math.max(0, state.selectIndex - 1);
-            srStatus.textContent = `${SONGS[state.selectIndex].title}, ${SONGS[state.selectIndex].artist}.`;
-          }
-          if (e.key === 'ArrowDown' || key === 'S') {
-            state.selectIndex = Math.min(SONGS.length - 1, state.selectIndex + 1);
-            srStatus.textContent = `${SONGS[state.selectIndex].title}, ${SONGS[state.selectIndex].artist}.`;
-          }
-          if (e.key === 'Enter') startSong(state.selectIndex);
+          if (e.key === 'ArrowLeft') switchDisc(-1);
+          if (e.key === 'ArrowRight') switchDisc(1);
+          if (e.key === 'ArrowUp' || key === 'W') moveRow(-1);
+          if (e.key === 'ArrowDown' || key === 'S') moveRow(1);
+          if (e.key === 'Enter') startSelectedSong();
           if (e.key === 'Escape') {
             state.screen = 'title';
             srStatus.textContent = 'Tela inicial.';
@@ -2518,6 +3486,8 @@
       });
 
       fitCanvas();
+      restoreLastSelection();
+      loadExternalCharts();
       yt.init();
       requestAnimationFrame(loop);
     })();

@@ -222,10 +222,49 @@
       const WMG_T_INTRO = 0.8, WMG_T_V1 = 17.5, WMG_T_B1 = 51, WMG_T_V2 = 84.5,
             WMG_T_SOLO = 118, WMG_T_B2 = 151.5, WMG_T_V3 = 185, WMG_T_OUTRO = 218.5;
 
+      // ---- Disco 3: Aeroriffs (todas as âncoras são estimativas calibráveis) ----
+      // Dream On (54BCLYNkFKg, ~4:28) — compasso limpo de 3.0s a 80 BPM
+      const DRM_BPM = 80, DRM_START_AT_SEC = 0, DRM_END_AT_SEC = 264;
+      const DRM_T_INTRO = 0.8, DRM_T_V1 = 24, DRM_T_V2 = 60, DRM_T_PRE1 = 96,
+            DRM_T_CH1 = 120, DRM_T_V3 = 138, DRM_T_PRE2 = 168, DRM_T_SCREAM = 192,
+            DRM_T_OUTRO = 240;
+
+      // Walk This Way — Run-D.M.C. ft. Aerosmith (4B_UYYPb-Gk, ~5:11; clipe tem esquete antes)
+      const WTW_BPM = 105;
+      const WTW_START_AT_SEC = 12;  // TUNÁVEL CRÍTICO: entrada da batida no clipe
+      const WTW_END_AT_SEC = 256;
+      const WTW_T_DRUMS = 0, WTW_T_RIFF = 9.1, WTW_T_V1 = 27.4, WTW_T_CH1 = 64,
+            WTW_T_RIFF2 = 82.3, WTW_T_V2 = 91.4, WTW_T_CH2 = 128, WTW_T_SOLO = 146.3,
+            WTW_T_V3 = 164.6, WTW_T_CH3 = 201.1, WTW_T_OUTRO = 219.4;
+
+      // Sweet Emotion (WKSaWDwAwxM, ~4:34)
+      const SWE_BPM = 96, SWE_START_AT_SEC = 0, SWE_END_AT_SEC = 270;
+      const SWE_T_INTRO = 0.5, SWE_T_CH1 = 25.5, SWE_T_V1 = 45.5, SWE_T_CH2 = 85.5,
+            SWE_T_V2 = 105.5, SWE_T_CH3 = 145.5, SWE_T_JAM = 165.5, SWE_T_OUTRO = 245.5;
+
+      // Janie's Got a Gun (RqQn2ADZE1A, ~5:33; intro ambiente antes do groove)
+      const JAN_BPM = 103;
+      const JAN_START_AT_SEC = 8;   // TUNÁVEL: entrada do groove no clipe
+      const JAN_END_AT_SEC = 325;
+      const JAN_T_INTRO = 0.5, JAN_T_V1 = 19.1, JAN_T_PRE1 = 56.4, JAN_T_CH1 = 75,
+            JAN_T_V2 = 112.3, JAN_T_PRE2 = 149.6, JAN_T_CH2 = 168.2, JAN_T_BR = 205.5,
+            JAN_T_SOLO = 242.8, JAN_T_CH3 = 261.4, JAN_T_OUTRO = 298.7;
+
+      // Livin' on the Edge (7nqcL0mjMjw, ~6:20)
+      const LOE_BPM = 93, LOE_START_AT_SEC = 0, LOE_END_AT_SEC = 370;
+      const LOE_T_INTRO = 0.8, LOE_T_V1 = 26.6, LOE_T_CH1 = 67.9, LOE_T_V2 = 98.9,
+            LOE_T_CH2 = 140.2, LOE_T_BR = 171.2, LOE_T_SOLO = 202.2, LOE_T_CH3 = 243.5,
+            LOE_T_OUTRO = 305.4;
+
       // Carrossel de discos
       const DISC_ANIM_SEC = 0.35;
       const DISC_SLIDE_PX = 560;
       const VINYL_SPIN_RAD_S = 2.4;  // ~23 rpm visual — giro legível sem estroboscopia
+
+      // Preview de música na seleção (fade-in de um trecho do meio da música)
+      const PREVIEW_DELAY = 0.45;    // debounce após mudar a seleção
+      const PREVIEW_VOLUME = 45;     // volume alvo (0-100)
+      const PREVIEW_FADE_SEC = 1.4;
 
       const SONGS = [
         {
@@ -479,6 +518,111 @@
           minAccuracy: 0.6,
           coverStyle: { bg1: '#101a33', bg2: '#23407a', accent: '#ff8fb0', motif: 'hand' },
           chartBuilder: buildHoldYourHandChart
+        },
+        {
+          id: 'dreamon',
+          title: 'DREAM ON',
+          subtitle: 'AEROSMITH 1973',
+          panelTitle: ['DREAM ON', ''],
+          artist: 'AEROSMITH',
+          genre: 'BALADA ROCK',
+          genreColor: '#7a4ab2',
+          youtubeId: '54BCLYNkFKg',
+          bpm: DRM_BPM,
+          gridBpm: DRM_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: DRM_START_AT_SEC,
+          endAtSec: DRM_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 3,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#12101f', bg2: '#2c2450', accent: '#e8d9a0', motif: 'wings' },
+          chartBuilder: buildDreamOnChart
+        },
+        {
+          id: 'walkthisway',
+          title: 'WALK THIS WAY',
+          subtitle: 'RAISING HELL',
+          panelTitle: ['WALK THIS', 'WAY'],
+          artist: 'RUN-D.M.C. FT. AEROSMITH',
+          genre: 'RAP ROCK',
+          genreColor: '#3a3f8f',
+          youtubeId: '4B_UYYPb-Gk',
+          bpm: WTW_BPM,
+          gridBpm: WTW_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: WTW_START_AT_SEC,
+          endAtSec: WTW_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 4,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#0d0d10', bg2: '#33333a', accent: '#e8e6df', motif: 'turntable' },
+          chartBuilder: buildWalkThisWayChart
+        },
+        {
+          id: 'sweetemotion',
+          title: 'SWEET EMOTION',
+          subtitle: 'TOYS IN THE ATTIC',
+          panelTitle: ['SWEET', 'EMOTION'],
+          artist: 'AEROSMITH',
+          genre: 'HARD ROCK',
+          genreColor: '#2e7d5b',
+          youtubeId: 'WKSaWDwAwxM',
+          bpm: SWE_BPM,
+          gridBpm: SWE_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: SWE_START_AT_SEC,
+          endAtSec: SWE_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 3,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#0a1a14', bg2: '#1e4a38', accent: '#7dffc9', motif: 'soundwaves' },
+          chartBuilder: buildSweetEmotionChart
+        },
+        {
+          id: 'janie',
+          title: "JANIE'S GOT A GUN",
+          subtitle: 'PUMP',
+          panelTitle: ["JANIE'S GOT", 'A GUN'],
+          artist: 'AEROSMITH',
+          genre: 'HARD ROCK',
+          genreColor: '#8f2d3a',
+          youtubeId: 'RqQn2ADZE1A',
+          bpm: JAN_BPM,
+          gridBpm: JAN_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: JAN_START_AT_SEC,
+          endAtSec: JAN_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 3,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#16090d', bg2: '#4a1420', accent: '#ff5470', motif: 'siren' },
+          chartBuilder: buildJanieChart
+        },
+        {
+          id: 'livinontheedge',
+          title: "LIVIN' ON THE EDGE",
+          subtitle: 'GET A GRIP',
+          panelTitle: ['LIVIN ON', 'THE EDGE'],
+          artist: 'AEROSMITH',
+          genre: 'HARD ROCK',
+          genreColor: '#b2632c',
+          youtubeId: '7nqcL0mjMjw',
+          bpm: LOE_BPM,
+          gridBpm: LOE_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: LOE_START_AT_SEC,
+          endAtSec: LOE_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 4,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#1a0e04', bg2: '#5a3410', accent: '#ffc46b', motif: 'cliff' },
+          chartBuilder: buildLivinOnTheEdgeChart
         }
       ];
 
@@ -494,6 +638,12 @@
           name: 'LET IT BEATLES',
           accent: '#4a90d9',
           songIds: ['herecomesthesun', 'cometogether', 'gentlyweeps', 'twistandshout', 'holdyourhand']
+        },
+        {
+          id: 'aero',
+          name: 'AERORIFFS',
+          accent: '#d13b5e',
+          songIds: ['dreamon', 'walkthisway', 'sweetemotion', 'janie', 'livinontheedge']
         },
         {
           id: 'piano',
@@ -574,6 +724,9 @@
         shake: 0,
         pulse: 0,
         muted: false,
+        whammy: false,
+        previewSongId: null,
+        previewPendingAt: 0,
         audioReady: false,
         audioCtx: null,
         masterGain: null,
@@ -788,6 +941,8 @@
         primed: false,
         blocked: {},
         currentId: null,
+        previewing: false,
+        previewStartedAt: 0,
         init() {
           // O IIFE não expõe nada no window; a API exige o callback global.
           window.onYouTubeIframeAPIReady = () => {
@@ -817,9 +972,23 @@
           if (!yt.player) return;
           yt.currentId = song.id;
           yt.primed = false;
+          yt.previewing = false;
           try {
+            yt.player.setVolume(100); // restaura o volume caso um preview tenha rodado
             yt.player.mute(); // priming silencioso durante o countdown
             yt.player.loadVideoById({ videoId: song.youtubeId, startSeconds: song.startAtSec });
+          } catch (_) {}
+        },
+        startPreview(song) {
+          if (!yt.player || !yt.ready || yt.blocked[song.id]) return;
+          yt.currentId = song.id;
+          yt.previewing = true;
+          yt.previewStartedAt = 0; // marcado quando o PLAYING chegar
+          try {
+            yt.player.setVolume(0);
+            if (!state.muted) yt.player.unMute();
+            const mid = song.startAtSec + songLength(song) / 2;
+            yt.player.loadVideoById({ videoId: song.youtubeId, startSeconds: Math.round(mid) });
           } catch (_) {}
         },
         play() { try { yt.player.playVideo(); } catch (_) {} },
@@ -830,7 +999,9 @@
         onStateChange(e) {
           const S = window.YT.PlayerState;
           if (e.data === S.PLAYING) {
-            if (!yt.primed && (state.screen === 'countdown' || state.screen === 'paused')) {
+            if (yt.previewing && state.screen === 'songSelect') {
+              yt.previewStartedAt = nowSec(); // inicia o fade-in no update()
+            } else if (!yt.primed && (state.screen === 'countdown' || state.screen === 'paused')) {
               // Buffer pronto: estaciona no início e libera o volume.
               yt.pause();
               yt.seek(currentSong().startAtSec);
@@ -842,17 +1013,19 @@
                 if (!state.muted) yt.setMuted(false);
               }
               clockOnPlaying(yt.getTime());
-            } else {
-              yt.pause(); // nada deve tocar fora do gameplay
+            } else if (!yt.previewing) {
+              yt.pause(); // nada deve tocar fora do gameplay/preview
             }
           } else if (e.data === S.BUFFERING && state.screen === 'playing') {
             clockFreeze();
-          } else if (e.data === S.ENDED && state.screen === 'playing') {
-            endGame(false);
+          } else if (e.data === S.ENDED) {
+            if (yt.previewing) yt.previewing = false;
+            else if (state.screen === 'playing') endGame(false);
           }
         },
         onError(e) {
           if (yt.currentId) yt.blocked[yt.currentId] = e.data;
+          yt.previewing = false;
           if (state.screen === 'countdown' || state.screen === 'playing') {
             state.screen = 'songSelect';
             showToast('Não foi possível reproduzir este vídeo. Escolha outra música.', 3500);
@@ -1910,6 +2083,364 @@
         return notes.sort((a, b2) => a.time - b2.time);
       }
 
+      // Dream On — arpejos de balada crescendo até a escada de gritos "dream on".
+      function buildDreamOnChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verse(anchor, bars) {
+          c.section(anchor, DRM_BPM);
+          for (let i = 0; i < bars; i++) {
+            const j = i % 4;
+            if (j === 3) {
+              if (i === bars - 1) { c.tap(b(i), 0); continue; } // respiração
+              c.tap(b(i), 2);
+              c.hold(b(i) + 1, 3, 2);
+              continue;
+            }
+            if (j === 1) c.pattern(b(i), '1.2.3.2.', 0.5);
+            else c.pattern(b(i), '0.1.2.1.', 0.5);
+          }
+        }
+
+        function pre(anchor, boostLane) {
+          c.section(anchor, DRM_BPM);
+          if (boostLane != null) c.boost(b(0), boostLane);
+          for (let i = 0; i < 7; i++) c.pattern(b(i), '0.2.1.3.', 0.5);
+          c.tap(b(7), 0);
+          c.hold(b(7) + 1, 3, 2);
+        }
+
+        // INTRO — arpejos sozinhos
+        c.section(DRM_T_INTRO, DRM_BPM);
+        for (let i = 0; i < 7; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '0.1.2.1.', 0.5);
+          else { c.tap(b(i), 1); c.tap(b(i) + 2, 2); }
+        }
+
+        verse(DRM_T_V1, 12);
+        verse(DRM_T_V2, 12);
+        pre(DRM_T_PRE1, null);
+
+        // CHORUS "sing with me"
+        c.section(DRM_T_CH1, DRM_BPM);
+        c.boost(b(0), 2);
+        for (let i = 0; i < 6; i++) {
+          if (i % 2 === 0) { c.tap(b(i), 0); c.tap(b(i) + 1, 1); c.hold(b(i) + 2, 3, 2); }
+          else c.pattern(b(i), '0.2.', 1);
+        }
+
+        verse(DRM_T_V3, 10);
+        pre(DRM_T_PRE2, 1);
+
+        // SCREAM — a escada dos "dream on"
+        c.section(DRM_T_SCREAM, DRM_BPM);
+        c.boost(b(0), 3);
+        c.boost(b(8), 1);
+        const ladder = [0, 1, 2, 3];
+        for (let i = 0; i < 16; i++) {
+          if (i % 2 === 0) c.hold(b(i), ladder[(i / 2) % 4], 2);
+          else c.pattern(b(i), '0123', 1);
+        }
+
+        // OUTRO
+        c.section(DRM_T_OUTRO, DRM_BPM);
+        for (let i = 0; i < 5; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '0.1.2.1.', 0.5);
+          else c.pattern(b(i), '1.2.3.2.', 0.5);
+        }
+        c.pattern(b(5), '3210', 0.5);
+        c.hold(b(6), 0, 4);
+        c.boost(b(6), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Walk This Way — o riff icônico entre versos de rap com scratches.
+      function buildWalkThisWayChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function riff(anchor, bars) {
+          c.section(anchor, WTW_BPM);
+          for (let i = 0; i < bars; i++) {
+            if (i % 2 === 0) c.pattern(b(i), '00.11.2.', 0.5);
+            else c.pattern(b(i), '0.2.1.3.', 0.5);
+          }
+        }
+
+        function rapVerse(anchor) {
+          c.section(anchor, WTW_BPM);
+          for (let i = 0; i < 16; i++) {
+            if (i === 15) { c.tap(b(i), 0); continue; } // respiração
+            if (i % 2 === 0) { c.tap(b(i), 0); c.tap(b(i) + 2, 2); c.tap(b(i) + 3.5, 1); }
+            else c.pattern(b(i), '1.3.', 1);
+          }
+        }
+
+        function chorus(anchor) {
+          c.section(anchor, WTW_BPM);
+          c.boost(b(0), 3);
+          for (let i = 0; i < 8; i++) {
+            if (i === 3 || i === 7) { c.tap(b(i), 0); c.hold(b(i) + 1, 3, 2); continue; }
+            if (i % 2 === 0) c.pattern(b(i), '00.11.2.', 0.5);
+            else c.pattern(b(i), '0.2.1.3.', 0.5);
+          }
+        }
+
+        // Bateria
+        c.section(WTW_T_DRUMS, WTW_BPM);
+        for (let i = 0; i < 4; i++) {
+          c.pattern(b(i), '0.0.', 1);
+          if (i === 3) c.tap(b(i) + 3, 1);
+        }
+
+        riff(WTW_T_RIFF, 8);
+        rapVerse(WTW_T_V1);
+        chorus(WTW_T_CH1);
+        riff(WTW_T_RIFF2, 4);
+        rapVerse(WTW_T_V2);
+        chorus(WTW_T_CH2);
+
+        // SOLO
+        c.section(WTW_T_SOLO, WTW_BPM);
+        c.boost(b(0), 3);
+        for (let i = 0; i < 8; i++) {
+          if (i % 4 === 3) { c.pattern(b(i), '0101', 0.5); c.pattern(b(i) + 2, '23', 1); continue; }
+          c.pattern(b(i), i % 2 === 0 ? '0123' : '3210', 1);
+        }
+
+        rapVerse(WTW_T_V3);
+        chorus(WTW_T_CH3);
+
+        // OUTRO
+        c.section(WTW_T_OUTRO, WTW_BPM);
+        for (let i = 0; i < 6; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '00.11.2.', 0.5);
+          else c.pattern(b(i), '0.2.1.3.', 0.5);
+        }
+        c.pattern(b(6), '0.2.', 1);
+        c.pattern(b(7), '0.2.', 1);
+        c.hold(b(8), 0, 4);
+        c.boost(b(8), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Sweet Emotion — baixo com talkbox, o chant em holds e a jam galopada.
+      function buildSweetEmotionChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function chant(anchor) {
+          c.section(anchor, SWE_BPM);
+          c.boost(b(0), 1);
+          for (let i = 0; i < 8; i++) {
+            if (i % 2 === 0) { c.hold(b(i), 3, 2); c.tap(b(i) + 2.5, 0); }
+            else c.pattern(b(i), '0.1.', 1);
+          }
+        }
+
+        function verse(anchor) {
+          c.section(anchor, SWE_BPM);
+          for (let i = 0; i < 16; i++) {
+            if (i === 15) { c.tap(b(i), 0); continue; } // respiração
+            if (i % 2 === 0) c.pattern(b(i), '00.2.1..', 0.5);
+            else c.pattern(b(i), '0.0.2.1.', 0.5);
+            if (i % 4 === 3) c.tap(b(i) + 3.5, 3);
+          }
+        }
+
+        // INTRO — baixo + talkbox
+        c.section(SWE_T_INTRO, SWE_BPM);
+        for (let i = 0; i < 10; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '0..0.1..', 0.5);
+          else c.tap(b(i), 3);
+        }
+
+        chant(SWE_T_CH1);
+        verse(SWE_T_V1);
+        chant(SWE_T_CH2);
+        verse(SWE_T_V2);
+        chant(SWE_T_CH3);
+
+        // JAM galopada
+        c.section(SWE_T_JAM, SWE_BPM);
+        c.boost(b(0), 3);
+        c.boost(b(16), 2);
+        for (let i = 0; i < 32; i++) {
+          const j = i % 4;
+          if (j < 2) c.pattern(b(i), '0.001.11', 0.5);
+          else if (j === 2) c.pattern(b(i), '2.2.3.3.', 0.5);
+          else c.pattern(b(i), '0.1.2.3.', 0.5);
+        }
+
+        // OUTRO
+        c.section(SWE_T_OUTRO, SWE_BPM);
+        for (let i = 0; i < 6; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '0..0.1..', 0.5);
+          else c.tap(b(i), 3);
+        }
+        c.pattern(b(6), '3210', 0.5);
+        c.hold(b(7), 0, 4);
+        c.boost(b(7), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Janie's Got a Gun — groove sombrio de baixo, refrão com "gun" sustentado.
+      function buildJanieChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verse(anchor) {
+          c.section(anchor, JAN_BPM);
+          for (let i = 0; i < 16; i++) {
+            if (i === 15) { c.tap(b(i), 0); continue; } // respiração
+            if (i % 2 === 0) c.pattern(b(i), '0.0..2.1', 0.5);
+            else c.pattern(b(i), '0.0.1...', 0.5);
+          }
+        }
+
+        function pre(anchor) {
+          c.section(anchor, JAN_BPM);
+          for (let i = 0; i < 7; i++) c.pattern(b(i), '0.1.2.3.', 0.5);
+          c.tap(b(7), 0);
+          c.hold(b(7) + 1, 3, 2);
+        }
+
+        function chorus(anchor) {
+          c.section(anchor, JAN_BPM);
+          c.boost(b(0), 3);
+          for (let i = 0; i < 16; i++) {
+            if (i % 8 === 7) { c.pattern(b(i), '0123', 1); continue; }
+            if (i % 2 === 0) {
+              c.tap(b(i), 0);
+              c.tap(b(i) + 1, 1);
+              c.tap(b(i) + 2, 2);
+              c.hold(b(i) + 3, 3, 1); // "gun"
+            } else {
+              c.pattern(b(i), '2.1.0...', 0.5);
+            }
+          }
+        }
+
+        // INTRO — clima
+        c.section(JAN_T_INTRO, JAN_BPM);
+        for (let i = 0; i < 8; i++) {
+          if (i % 2 === 0) c.tap(b(i), 1);
+          else { c.tap(b(i), 2); c.tap(b(i) + 2, 1); }
+        }
+
+        verse(JAN_T_V1);
+        pre(JAN_T_PRE1);
+        chorus(JAN_T_CH1);
+        verse(JAN_T_V2);
+        pre(JAN_T_PRE2);
+        chorus(JAN_T_CH2);
+
+        // BRIDGE "run away" — half-time
+        c.section(JAN_T_BR, JAN_BPM);
+        c.boost(b(0), 1);
+        for (let i = 0; i < 16; i++) {
+          if (i % 2 === 0) c.hold(b(i), [0, 2][(i / 2) % 2], 2);
+          else { c.tap(b(i), 1); c.tap(b(i) + 2, 3); }
+        }
+
+        // SOLO
+        c.section(JAN_T_SOLO, JAN_BPM);
+        for (let i = 0; i < 8; i++) c.pattern(b(i), i % 2 === 0 ? '0123' : '3210', 1);
+
+        chorus(JAN_T_CH3);
+
+        // OUTRO
+        c.section(JAN_T_OUTRO, JAN_BPM);
+        for (let i = 0; i < 5; i++) { c.tap(b(i), 0); c.tap(b(i) + 2, 2); }
+        c.pattern(b(5), '3210', 0.5);
+        c.hold(b(6), 0, 3);
+        c.boost(b(6), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Livin' on the Edge — arpejos abertos, refrões com sustain e solo em ciclos.
+      function buildLivinOnTheEdgeChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verse(anchor) {
+          c.section(anchor, LOE_BPM);
+          for (let i = 0; i < 16; i++) {
+            if (i === 15) { c.tap(b(i), 0); continue; } // respiração
+            if (i % 4 === 3) { c.tap(b(i), 1); c.hold(b(i) + 1, 3, 2); continue; }
+            if (i % 2 === 0) c.pattern(b(i), '0.1.2.1.', 0.5);
+            else c.pattern(b(i), '0.2.1.2.', 0.5);
+          }
+        }
+
+        function chorus(anchor, bars, boosts) {
+          c.section(anchor, LOE_BPM);
+          for (const [bar, lane] of boosts) c.boost(b(bar), lane);
+          for (let i = 0; i < bars; i++) {
+            if (i % 12 === 11) { c.tap(b(i), 0); continue; } // respiração
+            if (i % 2 === 0) { c.tap(b(i), 0); c.tap(b(i) + 1, 1); c.hold(b(i) + 2, 3, 1.5); }
+            else c.pattern(b(i), '2.1.0...', 0.5);
+          }
+        }
+
+        // INTRO — arpejo aberto
+        c.section(LOE_T_INTRO, LOE_BPM);
+        for (let i = 0; i < 10; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '0.1.2.1.', 0.5);
+          else { c.tap(b(i), 3); c.tap(b(i) + 2, 2); }
+        }
+
+        verse(LOE_T_V1);
+        chorus(LOE_T_CH1, 12, [[0, 2]]);
+        verse(LOE_T_V2);
+        chorus(LOE_T_CH2, 12, [[0, 2]]);
+
+        // BRIDGE half-time
+        c.section(LOE_T_BR, LOE_BPM);
+        for (let i = 0; i < 12; i++) {
+          if (i % 2 === 0) { c.hold(b(i), 0, 2); c.tap(b(i) + 3, 2); }
+          else { c.tap(b(i), 1); c.tap(b(i) + 2, 3); }
+        }
+
+        // SOLO — ciclos de 8
+        c.section(LOE_T_SOLO, LOE_BPM);
+        c.boost(b(0), 3);
+        for (let i = 0; i < 16; i++) {
+          const j = i % 8;
+          if (j <= 1) c.pattern(b(i), '01230123', 0.5);
+          else if (j === 2) c.pattern(b(i), '3.2.1.0.', 0.5);
+          else if (j === 3) c.hold(b(i), 3, 3);
+          else if (j <= 5) c.pattern(b(i), '32103210', 0.5);
+          else if (j === 6) c.pattern(b(i), '0.2.0.2.', 0.5);
+          else { c.hold(b(i), 0, 2); c.tap(b(i) + 3, 1); }
+        }
+
+        chorus(LOE_T_CH3, 24, [[0, 2], [12, 1]]);
+
+        // OUTRO — vamp "yeah yeah" com fade
+        c.section(LOE_T_OUTRO, LOE_BPM);
+        for (let i = 0; i < 16; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '0.1.2.1.', 0.5);
+          else c.pattern(b(i), '1.2.3.2.', 0.5);
+        }
+        for (let i = 16; i < 22; i++) c.pattern(b(i), '0.2.', 1);
+        c.pattern(b(22), '3210', 0.5);
+        c.hold(b(23), 0, 3);
+        c.boost(b(23), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
       function buildRuntimeChart(rawNotes) {
         return rawNotes.map(raw => {
           const type = raw.type || 'tap';
@@ -2055,6 +2586,7 @@
         const remembered = state.rowByDisc[DISCS[to].id] || 0;
         state.selectIndex = Math.min(remembered, DISCS[to].songIds.length - 1);
         saveLastSelection();
+        schedulePreview();
         srStatus.textContent = `Disco ${to + 1} de ${DISCS.length}: ${DISCS[to].name}. ${DISCS[to].songIds.length} músicas. Use cima e baixo para escolher.`;
       }
 
@@ -2063,6 +2595,7 @@
         state.selectIndex = clamp(state.selectIndex + dir, 0, max);
         state.rowByDisc[currentDisc().id] = state.selectIndex;
         saveLastSelection();
+        schedulePreview();
         const song = selectedSong();
         srStatus.textContent = `${song.title}, ${song.artist}. Dificuldade ${song.difficulty} de 5.`;
       }
@@ -2071,10 +2604,27 @@
         startSong(SONG_INDEX_BY_ID[currentDisc().songIds[state.selectIndex]]);
       }
 
+      // Preview: agenda com debounce; o fade-in acontece no update()
+      function schedulePreview() {
+        const song = selectedSong();
+        state.previewSongId = song ? song.id : null;
+        state.previewPendingAt = nowSec() + PREVIEW_DELAY;
+      }
+
+      function stopPreview() {
+        if (yt.previewing) {
+          yt.previewing = false;
+          yt.pause();
+        }
+        state.previewSongId = null;
+        state.previewPendingAt = 0;
+      }
+
       function toSongSelect() {
         yt.pause();
         landOnSong(currentSong().id);
         state.screen = 'songSelect';
+        schedulePreview();
         srStatus.textContent = 'Seleção de músicas.';
       }
 
@@ -2090,6 +2640,7 @@
           return;
         }
         setupAudio();
+        stopPreview();
         state.songIndex = index;
         landOnSong(song.id);
         saveLastSelection();
@@ -2234,7 +2785,7 @@
         state.activeKeyFlash.set(note.lane, 1);
         spawnHitParticles(note.lane, quality);
         state.floatingTexts.push({ text: `+${Math.round(gained)}`, lane: note.lane, born: nowSec(), life: 0.75, quality: note.type === 'boost' ? 'boost' : quality });
-        playHitSound(note.lane, quality);
+        // acertos são silenciosos por design — a música é o som; SFX só nos erros
       }
 
       function registerMiss(note, reason = 'MISS') {
@@ -2301,15 +2852,13 @@
       }
 
       function awardHoldTick(note) {
-        const gained = HOLD_TICK_BASE * totalMultiplier();
+        // Whammy (Shift) distorce a nota longa e rende um leve bônus
+        const whammyMult = state.whammy ? 1.5 : 1;
+        const gained = HOLD_TICK_BASE * totalMultiplier() * whammyMult;
         state.score += gained;
         note.ticksAwarded += 1;
-        if (!state.feverActive) state.fever = clamp(state.fever + 0.6, 0, 100);
+        if (!state.feverActive) state.fever = clamp(state.fever + (state.whammy ? 0.9 : 0.6), 0, 100);
         spawnHoldTickParticles(note.lane);
-        if (note.ticksAwarded % 2 === 0) {
-          // palm-mute chug grave (pista 0 = E2 ~82 Hz)
-          playPluck(GUITAR_TUNING[note.lane % 4] / 2, { dur: 0.07, vol: 0.07, bright: 900, q: 0.7, detune: 0 });
-        }
       }
 
       function completeHold(note) {
@@ -2327,8 +2876,6 @@
         state.pulse = Math.max(state.pulse, 0.8);
         state.floatingTexts.push({ text: `+${Math.round(bonus)} SEGUROU!`, lane: note.lane, born: nowSec(), life: 0.85, quality: 'hold' });
         spawnHitParticles(note.lane, 'perfect');
-        playPluck(GUITAR_TUNING[note.lane % GUITAR_TUNING.length] * 2, { dur: 0.35, vol: 0.13, bright: 4200 });
-        playTone(1318.5, 0.26, 0.06, 'sine');
       }
 
       function breakHold(note) {
@@ -2504,6 +3051,20 @@
             state.screen = 'playing';
             yt.play();
             srStatus.textContent = 'Valendo.';
+          }
+          return;
+        }
+
+        if (state.screen === 'songSelect') {
+          // Preview: dispara após o debounce e faz o fade-in de volume
+          if (state.previewPendingAt && now >= state.previewPendingAt && yt.ready) {
+            state.previewPendingAt = 0;
+            const song = selectedSong();
+            if (song && song.id === state.previewSongId) yt.startPreview(song);
+          }
+          if (yt.previewing && yt.previewStartedAt) {
+            const p = clamp((now - yt.previewStartedAt) / PREVIEW_FADE_SEC, 0, 1);
+            try { yt.player.setVolume(Math.round(PREVIEW_VOLUME * p)); } catch (_) {}
           }
           return;
         }
@@ -3089,6 +3650,98 @@
           ctx.lineTo(hcx + w * 0.09, hcy + w * 0.02);
           ctx.closePath();
           ctx.fill();
+        } else if (style.motif === 'wings') {
+          // asas simétricas com círculo central
+          const wcx = x + w * 0.5, wcy = y + h * 0.48;
+          ctx.strokeStyle = style.accent;
+          ctx.lineWidth = Math.max(2, w * 0.025);
+          for (const side of [-1, 1]) {
+            for (let i = 0; i < 3; i++) {
+              ctx.globalAlpha = 0.85 - i * 0.22;
+              ctx.beginPath();
+              ctx.moveTo(wcx + side * w * 0.08, wcy);
+              ctx.quadraticCurveTo(
+                wcx + side * w * (0.28 + i * 0.06), wcy - h * (0.22 - i * 0.05),
+                wcx + side * w * (0.44 + i * 0.02), wcy - h * (0.02 - i * 0.07)
+              );
+              ctx.stroke();
+            }
+          }
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = style.accent;
+          ctx.beginPath(); ctx.arc(wcx, wcy, w * 0.07, 0, TWO_PI); ctx.fill();
+          ctx.fillStyle = style.bg1;
+          ctx.beginPath(); ctx.arc(wcx, wcy, w * 0.04, 0, TWO_PI); ctx.fill();
+        } else if (style.motif === 'turntable') {
+          // toca-discos com braço
+          const tcx = x + w * 0.44, tcy = y + h * 0.52, tr = w * 0.3;
+          ctx.fillStyle = '#0a0a0c';
+          ctx.beginPath(); ctx.arc(tcx, tcy, tr, 0, TWO_PI); ctx.fill();
+          ctx.strokeStyle = style.accent;
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.5;
+          for (let g = tr * 0.4; g < tr * 0.92; g += tr * 0.14) {
+            ctx.beginPath(); ctx.arc(tcx, tcy, g, 0, TWO_PI); ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = style.accent;
+          ctx.beginPath(); ctx.arc(tcx, tcy, tr * 0.3, 0, TWO_PI); ctx.fill();
+          ctx.lineWidth = Math.max(2, w * 0.03);
+          ctx.strokeStyle = '#b9bfc9';
+          ctx.beginPath();
+          ctx.moveTo(x + w * 0.86, y + h * 0.16);
+          ctx.lineTo(x + w * 0.74, y + h * 0.5);
+          ctx.stroke();
+          ctx.fillStyle = '#b9bfc9';
+          ctx.beginPath(); ctx.arc(x + w * 0.86, y + h * 0.16, w * 0.05, 0, TWO_PI); ctx.fill();
+        } else if (style.motif === 'soundwaves') {
+          // ondas sonoras saindo de um alto-falante
+          fillRoundRect(x + w * 0.12, y + h * 0.36, w * 0.16, h * 0.28, 3, style.accent);
+          ctx.strokeStyle = style.accent;
+          for (let i = 0; i < 4; i++) {
+            ctx.globalAlpha = 0.8 - i * 0.17;
+            ctx.lineWidth = Math.max(2, w * (0.03 - i * 0.004));
+            ctx.beginPath();
+            ctx.arc(x + w * 0.3, y + h * 0.5, w * (0.14 + i * 0.14), -0.9, 0.9);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+        } else if (style.motif === 'siren') {
+          // giroflex com feixes de luz
+          const scx = x + w * 0.5, sby = y + h * 0.72;
+          ctx.globalAlpha = 0.4;
+          ctx.fillStyle = style.accent;
+          for (const [a1, a2] of [[-2.5, -2.1], [-1.05, -0.65]]) {
+            ctx.beginPath();
+            ctx.moveTo(scx, sby - h * 0.14);
+            ctx.arc(scx, sby - h * 0.14, w * 0.62, a1, a2);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = style.accent;
+          ctx.beginPath(); ctx.arc(scx, sby, w * 0.16, Math.PI, 0); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#1a1a1e';
+          fillRoundRect(scx - w * 0.22, sby, w * 0.44, h * 0.08, 3, '#1a1a1e');
+        } else if (style.motif === 'cliff') {
+          // beirada do penhasco com sol baixo
+          ctx.fillStyle = style.accent;
+          ctx.globalAlpha = 0.9;
+          ctx.beginPath(); ctx.arc(x + w * 0.68, y + h * 0.38, w * 0.13, 0, TWO_PI); ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#0b0704';
+          ctx.beginPath();
+          ctx.moveTo(x, y + h * 0.55);
+          ctx.lineTo(x + w * 0.42, y + h * 0.55);
+          ctx.lineTo(x + w * 0.46, y + h * 0.62);
+          ctx.lineTo(x + w * 0.46, y + h);
+          ctx.lineTo(x, y + h);
+          ctx.closePath();
+          ctx.fill();
+          // figura na beirada
+          ctx.fillStyle = '#0b0704';
+          ctx.beginPath(); ctx.arc(x + w * 0.38, y + h * 0.44, w * 0.035, 0, TWO_PI); ctx.fill();
+          ctx.fillRect(x + w * 0.365, y + h * 0.47, w * 0.032, h * 0.09);
         } else if (style.motif === 'moon') {
           ctx.fillStyle = style.accent;
           ctx.globalAlpha = 0.85;
@@ -3319,6 +3972,7 @@
         const geo = trackGeometry();
         drawLeftPanel();
         drawTrack(geo);
+        drawBoostLightning(geo);
         drawNotes(geo);
         drawHitLineAndKeys(geo);
         drawFeverBar(geo);
@@ -3520,9 +4174,11 @@
       function drawHoldNote(note, t, geo) {
         const active = note.holdState === 'active';
         const dead = note.holdState === 'broken' || note.holdState === 'missed';
-        const palette = lanePalette[note.lane % lanePalette.length];
+        const palette = state.boostActive ? boostPalette : lanePalette[note.lane % lanePalette.length];
         const from = Math.max(note.time, t);
         const to = note.endTime;
+        // whammy (Shift): a nota longa ativa treme como a alavanca do Guitar Hero
+        const wob = active && state.whammy ? Math.sin(nowSec() * 40 + note.lane * 2) * 4 : 0;
 
         if (to > from) {
           const K = clamp(Math.ceil(((to - from) / APPROACH_TIME) * 12), 4, 16);
@@ -3532,7 +4188,7 @@
             const prog = easeInQuad(clamp(1 - (ts - t) / APPROACH_TIME, 0, 1));
             const bounds = trackBoundsAt(prog, geo);
             pts.push({
-              x: laneCenterAt(note.lane, prog, geo),
+              x: laneCenterAt(note.lane, prog, geo) + wob * (1 - k / K),
               y: lerp(geo.topY + 25, geo.targetY, prog),
               w: (bounds.width / geo.lanes) * 0.72 * lerp(0.6, 0.35, k / K)
             });
@@ -3591,12 +4247,41 @@
           const w = (bounds.width / geo.lanes) * 0.72;
           const h = 66;
           const s = 1 + 0.05 * Math.sin(nowSec() * 12);
-          drawNote(laneCenterAt(note.lane, 1, geo) - (w * s) / 2, geo.targetY - (h * s) / 2, w * s, h * s, note.lane, 1);
+          drawNote(laneCenterAt(note.lane, 1, geo) + wob - (w * s) / 2, geo.targetY - (h * s) / 2, w * s, h * s, note.lane, 1);
         }
       }
 
+      // Raios azuis na pista enquanto o boost está ativo (flicker suave, alpha baixo)
+      function drawBoostLightning(geo) {
+        if (!state.boostActive) return;
+        const top = trackBoundsAt(0, geo);
+        const bottom = trackBoundsAt(1, geo);
+        const rand = seededRandom(Math.floor(nowSec() * 6) * 7919);
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineJoin = 'round';
+        for (let i = 0; i < 3; i++) {
+          const p0 = rand();
+          const xTop = top.left + top.width * p0;
+          const xBot = bottom.left + bottom.width * p0 + (rand() - 0.5) * 120;
+          ctx.strokeStyle = i === 0 ? '#8ff7ff' : '#00b4ff';
+          ctx.globalAlpha = 0.12 + rand() * 0.16;
+          ctx.lineWidth = 1.5 + rand() * 1.5;
+          ctx.beginPath();
+          ctx.moveTo(xTop, geo.topY + 6);
+          const steps = 6;
+          for (let s = 1; s <= steps; s++) {
+            const t = s / steps;
+            ctx.lineTo(lerp(xTop, xBot, t) + (rand() - 0.5) * 46, lerp(geo.topY + 6, geo.bottomY - 10, t));
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
       function drawNote(x, y, w, h, lane, p, pal, isBoost) {
-        const palette = pal || lanePalette[lane % lanePalette.length];
+        // durante o boost, TODAS as notas ficam azul neon
+        const palette = pal || (state.boostActive ? boostPalette : lanePalette[lane % lanePalette.length]);
         const r = 7 + p * 4;
         ctx.save();
         ctx.shadowColor = palette.glow || palette.main;
@@ -3780,6 +4465,7 @@
           : state.feedback === 'FEVER' ? '#ffd65c'
           : state.feedback === 'BOOST' ? '#33e0ff'
           : state.feedback === 'HOLD!' ? '#9df5ff'
+          : state.feedback === 'WHAMMY' ? '#8ff7ff'
           : '#e45460';
         ctx.fillStyle = color;
         ctx.textAlign = 'center';
@@ -3817,6 +4503,9 @@
         ctx.fillStyle = 'rgba(255,255,255,.8)';
         ctx.font = '800 18px Arial, sans-serif';
         ctx.fillText('PREPARE-SE', 885, 540);
+        ctx.fillStyle = 'rgba(255,255,255,.55)';
+        ctx.font = '600 13px Arial, sans-serif';
+        ctx.fillText('SHIFT distorce notas longas (+bônus)  •  ESPAÇO ativa o Fever', 885, 572);
         ctx.restore();
       }
 
@@ -3960,6 +4649,7 @@
         if (target === 'title-start') {
           setupAudio();
           state.screen = 'songSelect';
+          schedulePreview();
           srStatus.textContent = 'Seleção de músicas. Use as setas e Enter.';
           return;
         }
@@ -3978,6 +4668,7 @@
             state.selectIndex = i;
             state.rowByDisc[currentDisc().id] = i;
             saveLastSelection();
+            schedulePreview();
             const song = selectedSong();
             srStatus.textContent = `${song.title}, ${song.artist}.`;
           }
@@ -3999,6 +4690,7 @@
           if (e.key === 'Enter' || e.code === 'Space') {
             setupAudio();
             state.screen = 'songSelect';
+            schedulePreview();
             srStatus.textContent = 'Seleção de músicas. Use as setas e Enter.';
           }
           return;
@@ -4011,6 +4703,7 @@
           if (e.key === 'ArrowDown' || key === 'S') moveRow(1);
           if (e.key === 'Enter') startSelectedSong();
           if (e.key === 'Escape') {
+            stopPreview();
             state.screen = 'title';
             srStatus.textContent = 'Tela inicial.';
           }
@@ -4031,6 +4724,15 @@
         }
 
         // playing / countdown
+        if (e.key === 'Shift') {
+          state.whammy = true;
+          if (state.screen === 'playing' && state.activeHolds.size > 0) {
+            state.feedback = 'WHAMMY';
+            state.feedbackSub = 'DISTORÇÃO +50%';
+            state.feedbackAt = nowSec();
+          }
+          return;
+        }
         if (e.key === ',') { nudgeCalib(-25); return; }
         if (e.key === '.') { nudgeCalib(25); return; }
 
@@ -4057,6 +4759,7 @@
       }
 
       function handleKeyUp(e) {
+        if (e.key === 'Shift') state.whammy = false;
         const key = e.key === ';' ? ';' : e.key.toUpperCase();
         state.keysDown.delete(key);
         const lane = currentSong().keys.indexOf(key);
@@ -4076,6 +4779,7 @@
       window.addEventListener('keyup', handleKeyUp);
       window.addEventListener('blur', () => {
         state.keysDown.clear();
+        state.whammy = false;
         if (state.screen === 'playing') pauseGame();
       });
 

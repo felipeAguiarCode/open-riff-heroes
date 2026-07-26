@@ -7,9 +7,10 @@ Guitar Hero de navegador em um único arquivo HTML, com áudio direto do YouTube
 ## Recursos
 
 - **Notas nas cores do Guitar Hero** (verde, vermelho, amarelo, azul), pensadas na linha de guitarra de cada música
-- **Som de acerto de guitarra** sintetizado (pluck com afinação de cordas E-A-D-G por pista; palm-mute nos holds)
-- **Notas longas (hold)** com rastro em perspectiva e **notas boost** (multiplicador ×2, empilha até ×10)
-- **Seletor de discos**: carrossel de álbuns com vinil girando
+- **Acertos silenciosos** — a música é o som; SFX só quando você erra
+- **Notas longas (hold)** com rastro em perspectiva e **whammy no SHIFT**: distorce a nota (ela treme) e rende +50% nos ticks
+- **Notas boost**: multiplicador ×2 temporário — a pista inteira fica azul neon com raios elétricos
+- **Seletor de discos**: carrossel de álbuns com vinil girando e **preview com fade-in** de um trecho do meio da música ao selecionar
 - **Charts em JSON** (`charts/<id>.json`): link do YouTube, tempo e notas configuráveis sem tocar no código — botão ⤓ EXPORTAR JSON na seleção
 
 ## Discos e músicas
@@ -34,7 +35,17 @@ Guitar Hero de navegador em um único arquivo HTML, com áudio direto do YouTube
 | Twist and Shout | 2:32 | ●●●○○ |
 | I Want to Hold Your Hand | 2:23 | ●●○○○ |
 
-### Disco 3 — PIANO & ARCADE
+### Disco 3 — AERORIFFS
+
+| Música | Duração | Dificuldade |
+|---|---|---|
+| Dream On — Aerosmith | 4:24 | ●●●○○ |
+| Walk This Way — Run-D.M.C. ft. Aerosmith | 4:04 | ●●●●○ |
+| Sweet Emotion — Aerosmith | 4:30 | ●●●○○ |
+| Janie's Got a Gun — Aerosmith | 5:17 | ●●●○○ |
+| Livin' on the Edge — Aerosmith | 6:10 | ●●●●○ |
+
+### Disco 4 — PIANO & ARCADE
 
 | Música | Duração | Dificuldade |
 |---|---|---|
@@ -43,7 +54,7 @@ Guitar Hero de navegador em um único arquivo HTML, com áudio direto do YouTube
 
 ## Controles
 
-- **D F J K** — pistas · **Espaço** — Fever · **P/Esc** — pausar · **R** — reiniciar · **Q** — sair para músicas
+- **D F J K** — pistas · **SHIFT** — whammy nas notas longas · **Espaço** — Fever · **P/Esc** — pausar · **R** — reiniciar · **Q** — sair para músicas
 - **‹ ›** (setas ← →) — trocar de disco · **↑ ↓ / W S** — escolher música
 - **, / .** — calibrar offset de áudio em ±25 ms (persistido por música e incluído no JSON exportado)
 

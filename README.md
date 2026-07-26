@@ -1,17 +1,16 @@
-# piano-hero
+# open-riff-heroes
 
-Jogo de ritmo estilo Guitar Hero / Rock Band em um único arquivo HTML, com áudio direto do YouTube.
+Guitar Hero de navegador em um único arquivo HTML, com áudio direto do YouTube.
 
-🎹 **Jogar agora:** https://felipeaguiarcode.github.io/piano-hero/
+🎸 **Jogar agora:** https://felipeaguiarcode.github.io/open-riff-heroes/
 
 ## Recursos
 
-- **Notas neon nas cores do Guitar Hero** (verde, vermelho, amarelo, azul)
-- **Notas longas (hold)** com rastro em perspectiva — segure a tecla até o fim
-- **Notas boost** azul-choque: multiplicador ×2 temporário (empilha com combo e Fever até ×10)
-- **Seletor de discos**: carrossel de álbuns com vinil girando; ‹ › troca de disco com animação
-- **Charts em JSON** (`charts/<id>.json`): link do YouTube, tempo e sequência de notas configuráveis sem tocar no código — botão ⤓ EXPORTAR JSON na tela de seleção
-- Clock híbrido sincronizado ao player do YouTube, com calibração de offset ao vivo
+- **Notas nas cores do Guitar Hero** (verde, vermelho, amarelo, azul), pensadas na linha de guitarra de cada música
+- **Som de acerto de guitarra** sintetizado (pluck com afinação de cordas E-A-D-G por pista; palm-mute nos holds)
+- **Notas longas (hold)** com rastro em perspectiva e **notas boost** (multiplicador ×2, empilha até ×10)
+- **Seletor de discos**: carrossel de álbuns com vinil girando
+- **Charts em JSON** (`charts/<id>.json`): link do YouTube, tempo e notas configuráveis sem tocar no código — botão ⤓ EXPORTAR JSON na seleção
 
 ## Discos e músicas
 
@@ -25,7 +24,17 @@ Jogo de ritmo estilo Guitar Hero / Rock Band em um único arquivo HTML, com áud
 | Knights of Cydonia — Muse | 6:03 | ●●●●○ |
 | Through the Fire and Flames — DragonForce | 7:18 | ●●●●● |
 
-### Disco 2 — PIANO & ARCADE
+### Disco 2 — LET IT BEATLES
+
+| Música | Duração | Dificuldade |
+|---|---|---|
+| Here Comes the Sun | 3:03 | ●●●○○ |
+| Come Together | 4:14 | ●●●○○ |
+| While My Guitar Gently Weeps | 4:44 | ●●●●○ |
+| Twist and Shout | 2:32 | ●●●○○ |
+| I Want to Hold Your Hand | 2:23 | ●●○○○ |
+
+### Disco 3 — PIANO & ARCADE
 
 | Música | Duração | Dificuldade |
 |---|---|---|
@@ -40,9 +49,11 @@ Jogo de ritmo estilo Guitar Hero / Rock Band em um único arquivo HTML, com áud
 
 ## Charts em JSON
 
-Cada música é definida por `charts/<id>.json`, carregado por fetch na inicialização (com fallback para o chart embutido). Formato das notas: `[tempo, pista]` (tap), `[tempo, pista, "h", duração]` (hold), `[tempo, pista, "b"]` (boost) — tempos em segundos relativos a `startAtSec`. O campo `youtube` aceita qualquer URL de vídeo do YouTube.
+Cada música é definida por `charts/<id>.json`, carregado por fetch na inicialização (com fallback para o chart embutido). Notas: `[tempo, pista]` (tap), `[tempo, pista, "h", duração]` (hold), `[tempo, pista, "b"]` (boost) — segundos relativos a `startAtSec`. O campo `youtube` aceita qualquer URL de vídeo.
 
-Fluxo de edição: jogue → calibre com `,`/`.` → **⤓ EXPORTAR JSON** → substitua o arquivo em `charts/` → commit.
+Fluxo de edição: jogue → calibre com `,`/`.` → **⤓ EXPORTAR JSON** → substitua em `charts/` → commit.
+
+> Compatibilidade: os saves (recordes/offsets) usam chaves `pianoHero.*` no localStorage — mantidas após o rename do projeto.
 
 ## Rodar localmente
 

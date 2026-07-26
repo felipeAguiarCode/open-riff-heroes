@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Piano Hero</title>
+  <title>Open Riff Heroes</title>
   <style>
     :root {
       color-scheme: dark;
@@ -102,7 +102,7 @@
   </style>
 </head>
 <body>
-  <main id="game-shell" aria-label="Piano Hero, jogo de ritmo musical">
+  <main id="game-shell" aria-label="Open Riff Heroes, jogo de ritmo musical">
     <canvas id="game" tabindex="0" aria-describedby="sr-status"></canvas>
     <div id="top-actions">
       <button class="icon-btn" id="pauseBtn" type="button" title="Pausar ou continuar">P</button>
@@ -194,6 +194,33 @@
             TTF_T_PRE1 = 100, TTF_T_CH1 = 115, TTF_T_POST = 147, TTF_T_V2 = 163,
             TTF_T_PRE2 = 193, TTF_T_CH2 = 208, TTF_T_SOLO = 240, TTF_T_BRIDGE = 355,
             TTF_T_CH3 = 380, TTF_T_OUTRO = 420;
+
+      // ---- Disco 2: Let It Beatles (todas as âncoras são estimativas calibráveis) ----
+      // I Want to Hold Your Hand (v1HDt1tknTc, ~2:26)
+      const IWH_BPM = 130, IWH_START_AT_SEC = 0, IWH_END_AT_SEC = 143;
+      const IWH_T_INTRO = 0.5, IWH_T_V1 = 8, IWH_T_CH1 = 27, IWH_T_V2 = 42, IWH_T_CH2 = 61,
+            IWH_T_BRIDGE = 76, IWH_T_V3 = 94, IWH_T_CH3 = 113, IWH_T_OUTRO = 128;
+
+      // Twist and Shout (2RicaUqd9Hg, ~2:35)
+      const TAS_BPM = 124, TAS_START_AT_SEC = 0, TAS_END_AT_SEC = 152;
+      const TAS_T_INTRO = 0.5, TAS_T_V1 = 6.5, TAS_T_V2 = 34, TAS_T_BREAK = 62,
+            TAS_T_V3 = 79.5, TAS_T_BUILD = 107, TAS_T_OUTRO = 121;
+
+      // Here Comes the Sun (KQetemT1sWc, ~3:06) — a ponte tem métrica mista (11/8);
+      // densidade baixa + c.shift() por ciclo se precisar calibrar
+      const HCS_BPM = 129, HCS_START_AT_SEC = 0, HCS_END_AT_SEC = 183;
+      const HCS_T_INTRO = 1.0, HCS_T_V1 = 14.5, HCS_T_CH1 = 30, HCS_T_V2 = 45, HCS_T_CH2 = 60,
+            HCS_T_BRIDGE = 75, HCS_T_V3 = 129, HCS_T_CH3 = 144, HCS_T_OUTRO = 159;
+
+      // Come Together (45cYwDMibGo, ~4:18)
+      const CT_BPM = 82, CT_START_AT_SEC = 0, CT_END_AT_SEC = 254;
+      const CT_T_INTRO = 0.8, CT_T_V1 = 16, CT_T_CH1 = 45.5, CT_T_V2 = 57.5, CT_T_CH2 = 87,
+            CT_T_SOLO = 99, CT_T_V3 = 128.5, CT_T_CH3 = 158, CT_T_OUTRO = 170;
+
+      // While My Guitar Gently Weeps (zOKGcEfSwnY, ~4:46)
+      const WMG_BPM = 115, WMG_START_AT_SEC = 0, WMG_END_AT_SEC = 284;
+      const WMG_T_INTRO = 0.8, WMG_T_V1 = 17.5, WMG_T_B1 = 51, WMG_T_V2 = 84.5,
+            WMG_T_SOLO = 118, WMG_T_B2 = 151.5, WMG_T_V3 = 185, WMG_T_OUTRO = 218.5;
 
       // Carrossel de discos
       const DISC_ANIM_SEC = 0.35;
@@ -347,6 +374,111 @@
           minAccuracy: 0.65,
           coverStyle: { bg1: '#1a0402', bg2: '#7a1408', accent: '#ffb648', motif: 'fireflames' },
           chartBuilder: buildTTFAFChart
+        },
+        {
+          id: 'herecomesthesun',
+          title: 'HERE COMES THE SUN',
+          subtitle: 'ABBEY ROAD',
+          panelTitle: ['HERE COMES', 'THE SUN'],
+          artist: 'THE BEATLES',
+          genre: 'FOLK ROCK',
+          genreColor: '#b28a2c',
+          youtubeId: 'KQetemT1sWc',
+          bpm: HCS_BPM,
+          gridBpm: HCS_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: HCS_START_AT_SEC,
+          endAtSec: HCS_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 3,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#1c1206', bg2: '#7a4a12', accent: '#ffd23b', motif: 'sunrays' },
+          chartBuilder: buildHereComesTheSunChart
+        },
+        {
+          id: 'cometogether',
+          title: 'COME TOGETHER',
+          subtitle: 'ABBEY ROAD',
+          panelTitle: ['COME', 'TOGETHER'],
+          artist: 'THE BEATLES',
+          genre: 'BLUES ROCK',
+          genreColor: '#1f6e6a',
+          youtubeId: '45cYwDMibGo',
+          bpm: CT_BPM,
+          gridBpm: CT_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: CT_START_AT_SEC,
+          endAtSec: CT_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 3,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#07131a', bg2: '#16323c', accent: '#e8e6df', motif: 'crossing' },
+          chartBuilder: buildComeTogetherChart
+        },
+        {
+          id: 'gentlyweeps',
+          title: 'WHILE MY GUITAR GENTLY WEEPS',
+          subtitle: 'THE WHITE ALBUM',
+          panelTitle: ['GENTLY', 'WEEPS'],
+          artist: 'THE BEATLES',
+          genre: 'ROCK CLÁSSICO',
+          genreColor: '#6a3ab2',
+          youtubeId: 'zOKGcEfSwnY',
+          bpm: WMG_BPM,
+          gridBpm: WMG_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: WMG_START_AT_SEC,
+          endAtSec: WMG_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 4,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#160a1e', bg2: '#33184a', accent: '#c9a8ff', motif: 'weeps' },
+          chartBuilder: buildWhileMyGuitarChart
+        },
+        {
+          id: 'twistandshout',
+          title: 'TWIST AND SHOUT',
+          subtitle: 'PLEASE PLEASE ME',
+          panelTitle: ['TWIST AND', 'SHOUT'],
+          artist: 'THE BEATLES',
+          genre: 'ROCK 60s',
+          genreColor: '#b23a2c',
+          youtubeId: '2RicaUqd9Hg',
+          bpm: TAS_BPM,
+          gridBpm: TAS_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: TAS_START_AT_SEC,
+          endAtSec: TAS_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 3,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#2a0a12', bg2: '#8f1630', accent: '#ff9d3b', motif: 'twist' },
+          chartBuilder: buildTwistAndShoutChart
+        },
+        {
+          id: 'holdyourhand',
+          title: 'I WANT TO HOLD YOUR HAND',
+          subtitle: 'SINGLE 1963',
+          panelTitle: ['HOLD YOUR', 'HAND'],
+          artist: 'THE BEATLES',
+          genre: 'MERSEYBEAT',
+          genreColor: '#2c5fb2',
+          youtubeId: 'v1HDt1tknTc',
+          bpm: IWH_BPM,
+          gridBpm: IWH_BPM,
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: IWH_START_AT_SEC,
+          endAtSec: IWH_END_AT_SEC,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 2,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#101a33', bg2: '#23407a', accent: '#ff8fb0', motif: 'hand' },
+          chartBuilder: buildHoldYourHandChart
         }
       ];
 
@@ -356,6 +488,12 @@
           name: 'LENDAS DO ROCK',
           accent: '#e6483f',
           songIds: ['paintitblack', 'jungle', 'one', 'cydonia', 'fireflames']
+        },
+        {
+          id: 'beatles',
+          name: 'LET IT BEATLES',
+          accent: '#4a90d9',
+          songIds: ['herecomesthesun', 'cometogether', 'gentlyweeps', 'twistandshout', 'holdyourhand']
         },
         {
           id: 'piano',
@@ -375,6 +513,8 @@
       function songBeat(song) { return 60 / song.bpm; }
       function getBeatSec() { return songBeat(currentSong()); }
 
+      // As chaves do localStorage mantêm o prefixo 'pianoHero.' por compatibilidade
+      // com saves antigos (o jogo foi renomeado para Open Riff Heroes).
       function readHighScore(songId) {
         try { return Number(localStorage.getItem('pianoHero.high.' + songId) || 0); }
         catch (_) { return 0; }
@@ -565,12 +705,44 @@
         osc.stop(t + duration + 0.04);
       }
 
+      // Pluck de guitarra sintetizado: serra dupla desafinada → lowpass com varredura
+      // rápida (ataque brilhante que fecha em ~90ms) → decay exponencial.
+      function playPluck(freq, { dur = 0.3, vol = 0.18, bright = 3200, q = 1.2, detune = 9 } = {}) {
+        if (!state.audioReady || state.muted) return;
+        const t = state.audioCtx.currentTime;
+        const gain = state.audioCtx.createGain();
+        const filter = state.audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.Q.value = q;
+        filter.frequency.setValueAtTime(bright, t);
+        filter.frequency.exponentialRampToValueAtTime(Math.max(freq * 2, 320), t + 0.09);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.004);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        const cents = detune ? [0, detune] : [0]; // detune 0 = 1 osc (chug seco)
+        for (const c of cents) {
+          const osc = state.audioCtx.createOscillator();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, t);
+          osc.detune.setValueAtTime(c, t);
+          osc.connect(filter);
+          osc.start(t);
+          osc.stop(t + dur + 0.05);
+        }
+        filter.connect(gain);
+        gain.connect(state.masterGain);
+      }
+
+      // Afinação das pistas = cordas de guitarra (E3 A3 D4 G4 + extensão aguda)
+      const GUITAR_TUNING = [164.81, 220.00, 293.66, 392.00, 493.88, 659.25, 880.00, 1174.66];
+
       function playHitSound(lane, quality) {
-        const scale = [261.63, 293.66, 329.63, 349.23, 392, 440, 493.88, 523.25];
-        const q = quality === 'perfect' ? 1 : quality === 'great' ? 0.85 : 0.7;
-        const f = scale[lane % scale.length];
-        playTone(f, 0.16, 0.17 * q, 'triangle');
-        playTone(f * 2, 0.09, 0.06 * q, 'sine', quality === 'perfect' ? 4 : 0);
+        const f = GUITAR_TUNING[lane % GUITAR_TUNING.length];
+        const cfg = quality === 'perfect' ? { vol: 0.20, bright: 3800 }
+          : quality === 'great' ? { vol: 0.16, bright: 2800 }
+          : { vol: 0.12, bright: 2000 };
+        playPluck(f, { dur: 0.28, vol: cfg.vol, bright: cfg.bright });
+        if (quality === 'perfect') playTone(f * 2, 0.12, 0.05, 'sine', 4); // harmônico de 12ª casa
       }
 
       function playBeatSound(strong) {
@@ -941,7 +1113,8 @@
             }
             if (i % 2) c.pattern(b(i), mirror ? '3.1.' : '0.2.', 1);
             else c.pattern(b(i), mirror ? '2.0.' : '1.3.', 1);
-            if (i === 3) c.pattern(b(i) + 2, mirror ? '3210' : '0123', 0.5);
+            // resposta descendente da cítara a cada estrofe
+            if (i === 3 || i === 9) c.pattern(b(i) + 2, mirror ? '3210' : '0123', 0.5);
           }
         }
 
@@ -1019,7 +1192,7 @@
           for (let i = 0; i < 12; i++) {
             if (i === 10) { c.tap(b(i), mirror ? 2 : 1); c.hold(b(i), mirror ? 0 : 3, 2); continue; }
             if (i % 2) c.pattern(b(i), mirror ? '3..2..1.' : '0..1..2.', 0.5);
-            else { c.pattern(b(i), mirror ? '2.0.' : '1.3.', 1); c.tap(b(i) + 1.5, mirror ? 0 : 3); }
+            else c.pattern(b(i), mirror ? '33.22.1.' : '00.11.2.', 0.5); // contorno do riff, não a cadência vocal
           }
         }
 
@@ -1390,6 +1563,349 @@
         for (let i = 0; i < 8; i++) c.pattern(b(i), '3210', 1);
         c.hold(b(8), 0, 8);
         c.boost(b(8), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Here Comes the Sun — riff fingerpicked, refrões com "sun" em hold, ponte de métrica mista.
+      function buildHereComesTheSunChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function introRiff(bars) {
+          for (let i = 0; i < bars; i++) {
+            if (i % 2 === 0) c.pattern(b(i), '2.1.00..', 0.5);
+            else c.pattern(b(i), '3.2.1...', 0.5);
+          }
+        }
+
+        function verse(anchor) {
+          c.section(anchor, HCS_BPM);
+          for (let i = 0; i < 7; i++) {
+            if (i % 2 === 0) c.pattern(b(i), '0.1.2.1.', 0.5);
+            else c.pattern(b(i), '0.2.1.2.', 0.5);
+            if (i % 4 === 2) c.tap(b(i) + 2, 3); // melodia
+          }
+        }
+
+        function chorus(anchor) {
+          c.section(anchor, HCS_BPM);
+          c.boost(b(0), 1);
+          for (const i of [0, 2, 4]) {
+            c.tap(b(i), 0); c.tap(b(i) + 1, 1); c.tap(b(i) + 2, 2);
+            c.hold(b(i) + 3, 3, 1); // "sun"
+          }
+          for (const i of [1, 3, 5]) c.pattern(b(i), '1.2.1...', 0.5);
+          c.hold(b(6), 2, 2); // "it's all right"
+          c.tap(b(6) + 3, 0);
+        }
+
+        c.section(HCS_T_INTRO, HCS_BPM);
+        introRiff(6);
+
+        verse(HCS_T_V1);
+        chorus(HCS_T_CH1);
+        verse(HCS_T_V2);
+        chorus(HCS_T_CH2);
+
+        // BRIDGE "Sun, sun, sun" ×5 — métrica mista no original; se derivar,
+        // calibrar com c.shift(±0.1) entre os ciclos
+        c.section(HCS_T_BRIDGE, HCS_BPM);
+        c.boost(b(12), 3);
+        c.boost(b(24), 2);
+        for (let k = 0; k < 5; k++) {
+          const base = k * 6;
+          c.hold(b(base), 1, 2);
+          c.hold(b(base + 1), 2, 2);
+          c.hold(b(base + 2), 3, 2);
+          c.pattern(b(base + 3), '0.1.2.1.', 0.5);
+          c.pattern(b(base + 4), '0.0.', 1);
+          if (k >= 2) c.tap(b(base) + 2, 0);
+        }
+
+        verse(HCS_T_V3);
+        chorus(HCS_T_CH3);
+
+        // OUTRO
+        c.section(HCS_T_OUTRO, HCS_BPM);
+        introRiff(8);
+        c.pattern(b(8), '0.1.2.1.', 0.5);
+        c.pattern(b(9), '0.1.2.1.', 0.5);
+        c.pattern(b(10), '2.1.0...', 0.5);
+        c.hold(b(11), 3, 3);
+        c.boost(b(11), 0);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Come Together — o riff descendente do baixo é o hook onipresente; stabs e solo blues.
+      function buildComeTogetherChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+        const RIFF = '3.32.10.';
+
+        function verse(anchor) {
+          c.section(anchor, CT_BPM);
+          for (let i = 0; i < 10; i++) {
+            if (i === 9) continue; // respiração
+            if (i % 2 === 0) { c.pattern(b(i), RIFF, 0.5); continue; }
+            c.tap(b(i) + 1.5, 1);
+            c.tap(b(i) + 3, 2);
+            if (i === 5) c.hold(b(i), 0, 2); // swell
+          }
+        }
+
+        function chorus(anchor) {
+          c.section(anchor, CT_BPM);
+          c.boost(b(0), 3);
+          c.tap(b(0), 0); c.tap(b(0) + 1, 1); c.tap(b(0) + 2.5, 2);
+          c.hold(b(1), 3, 2); // "over meee"
+          c.pattern(b(2), RIFF, 0.5);
+          c.tap(b(3), 3);
+        }
+
+        c.section(CT_T_INTRO, CT_BPM);
+        for (let i = 0; i < 5; i++) c.pattern(b(i), RIFF, 0.5);
+
+        verse(CT_T_V1);
+        chorus(CT_T_CH1);
+        verse(CT_T_V2);
+        chorus(CT_T_CH2);
+
+        // SOLO blues
+        c.section(CT_T_SOLO, CT_BPM);
+        c.boost(b(0), 2);
+        for (let i = 0; i < 10; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '01212323', 0.5);
+          else { c.tap(b(i), 3); c.hold(b(i) + 2, 2, 1.5); } // bend
+        }
+
+        verse(CT_T_V3);
+        chorus(CT_T_CH3);
+
+        // OUTRO — vamp longo com densidade crescendo e fade
+        c.section(CT_T_OUTRO, CT_BPM);
+        c.boost(b(16), 1);
+        for (let i = 0; i < 8; i++) c.pattern(b(i), RIFF, 0.5);
+        for (let i = 8; i < 16; i++) { c.pattern(b(i), RIFF, 0.5); c.tap(b(i) + 1.5, 1); }
+        for (let i = 16; i < 24; i++) {
+          if (i % 2 === 0) c.pattern(b(i), RIFF, 0.5);
+          else c.pattern(b(i), '0.1.0.1.', 0.5);
+        }
+        for (let i = 24; i < 27; i++) c.pattern(b(i), RIFF, 0.5);
+        c.hold(b(27), 3, 4);
+        c.boost(b(27), 0);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // While My Guitar Gently Weeps — arpejos Am contínuos; os bends chorosos são holds.
+      function buildWhileMyGuitarChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verse(anchor, mirror) {
+          c.section(anchor, WMG_BPM);
+          for (let i = 0; i < 16; i++) {
+            const j = i % 4;
+            if (j === 3) {
+              if (i === 15) continue; // respiração no fim
+              c.tap(b(i), mirror ? 1 : 2);
+              c.hold(b(i) + 1, mirror ? 0 : 3, 2.5); // bend choroso
+              continue;
+            }
+            if (j === 1) c.pattern(b(i), mirror ? '21012101' : '12321232', 0.5);
+            else c.pattern(b(i), mirror ? '32123212' : '01210121', 0.5);
+          }
+        }
+
+        function bridge(anchor) {
+          c.section(anchor, WMG_BPM);
+          c.boost(b(0), 1);
+          for (let i = 0; i < 15; i++) {
+            if (i % 2 === 0) {
+              c.hold(b(i), 3, 2);
+              c.tap(b(i) + 2, 0);
+              c.tap(b(i) + 3, 1);
+            } else {
+              c.pattern(b(i), '2.1.0.1.', 0.5);
+            }
+          }
+        }
+
+        c.section(WMG_T_INTRO, WMG_BPM);
+        for (let i = 0; i < 8; i++) {
+          if (i % 2 === 0) c.pattern(b(i), '0.1.2.1.', 0.5);
+          else c.pattern(b(i), '1.2.3.2.', 0.5);
+        }
+
+        verse(WMG_T_V1, false);
+        bridge(WMG_T_B1);
+        verse(WMG_T_V2, false);
+
+        // SOLO (Clapton) — ciclos de 8 com corridas, descidas e bends longos
+        c.section(WMG_T_SOLO, WMG_BPM);
+        c.boost(b(0), 3);
+        for (let i = 0; i < 16; i++) {
+          const j = i % 8;
+          if (j <= 1) c.pattern(b(i), '01230123', 0.5);
+          else if (j === 2) c.pattern(b(i), '3.2.1.0.', 0.5);
+          else if (j === 3) c.hold(b(i), 3, 3);
+          else if (j <= 5) c.pattern(b(i), '32103210', 0.5);
+          else if (j === 6) c.pattern(b(i), '0.2.0.2.', 0.5);
+          else { c.hold(b(i), 0, 2); c.tap(b(i) + 3, 1); }
+        }
+
+        bridge(WMG_T_B2);
+        verse(WMG_T_V3, true);
+
+        // OUTRO — solo sobre o vamp, fade e acorde final
+        c.section(WMG_T_OUTRO, WMG_BPM);
+        c.boost(b(8), 2);
+        for (let i = 0; i < 20; i++) {
+          const j = i % 4;
+          if (j === 0) c.pattern(b(i), '01210121', 0.5);
+          else if (j === 1) c.pattern(b(i), '1.2.3.2.', 0.5);
+          else if (j === 2) c.pattern(b(i), '21012101', 0.5);
+          else c.hold(b(i), 3, 3);
+        }
+        for (let i = 20; i < 29; i++) c.pattern(b(i), '0.1.2.1.', 0.5);
+        c.hold(b(29), 0, 5);
+        c.boost(b(29), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // Twist and Shout — strums D-D-G-A, break de respostas e o "Ahhh" empilhado em holds.
+      function buildTwistAndShoutChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verse(anchor) {
+          c.section(anchor, TAS_BPM);
+          for (let i = 0; i < 13; i++) {
+            c.pattern(b(i), '00.1.2..', 0.5);
+            if (i % 4 === 2) c.tap(b(i) + 3.5, 3);
+          }
+        }
+
+        c.section(TAS_T_INTRO, TAS_BPM);
+        for (let i = 0; i < 3; i++) c.pattern(b(i), '0.1.22..', 0.5);
+
+        verse(TAS_T_V1);
+        verse(TAS_T_V2);
+
+        // BREAK — respostas de guitarra
+        c.section(TAS_T_BREAK, TAS_BPM);
+        c.boost(b(0), 3);
+        for (let i = 0; i < 8; i++) {
+          if (i % 4 === 3) { c.pattern(b(i), '0.1.0.1.', 0.5); continue; }
+          c.pattern(b(i), i % 2 === 0 ? '0123' : '3210', 1);
+        }
+        c.tap(b(8), 0);
+
+        verse(TAS_T_V3);
+
+        // BUILD — o "Ahhh" empilhado
+        c.section(TAS_T_BUILD, TAS_BPM);
+        c.hold(b(0), 0, 3);
+        c.hold(b(1), 1, 3);
+        c.hold(b(2), 2, 3);
+        c.hold(b(3), 3, 3);
+        c.pattern(b(4), '0123', 0.5);
+        c.pattern(b(5), '0123', 0.5);
+        c.pattern(b(6), '0.1.2.3.', 0.5);
+
+        // OUTRO — clímax
+        c.section(TAS_T_OUTRO, TAS_BPM);
+        c.boost(b(0), 2);
+        c.boost(b(8), 1);
+        for (let i = 0; i < 13; i++) {
+          if (i % 2 === 0) { c.pattern(b(i), '00.1.2..', 0.5); c.tap(b(i) + 3.5, 3); }
+          else c.pattern(b(i), '2.1.0...', 0.5);
+        }
+        c.pattern(b(13), '0123', 0.5);
+        c.hold(b(14), 0, 4);
+        c.boost(b(14), 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      // I Want to Hold Your Hand — riff de abertura, comping com pickups e o "haaand" em hold.
+      function buildHoldYourHandChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        function verse(anchor) {
+          c.section(anchor, IWH_BPM);
+          for (let i = 0; i < 10; i++) {
+            if (i === 9) { c.tap(b(i), 0); continue; } // respiração
+            if (i % 4 === 3) { c.pattern(b(i), '0123', 0.5); continue; } // pickup
+            if (i % 2 === 0) c.pattern(b(i), '0..2..1.', 0.5);
+            else c.pattern(b(i), '3..1..2.', 0.5);
+          }
+        }
+
+        function chorus(anchor, bars) {
+          c.section(anchor, IWH_BPM);
+          c.boost(b(0), 2);
+          for (let i = 0; i < bars; i++) {
+            if (i === 6) { c.pattern(b(i), '0123', 0.5); continue; }
+            if (i >= 7) continue; // respiração
+            if (i % 2 === 0) {
+              c.tap(b(i), 0);
+              c.tap(b(i) + 1, 1);
+              c.hold(b(i) + 2, 3, 1.5); // "haaand"
+            } else {
+              c.pattern(b(i), '2.1.0.', 0.5);
+            }
+          }
+        }
+
+        c.section(IWH_T_INTRO, IWH_BPM);
+        for (let i = 0; i < 4; i++) {
+          c.pattern(b(i), '0.1.2.', 0.5);
+          c.hold(b(i) + 3, 3, 1);
+        }
+
+        verse(IWH_T_V1);
+        chorus(IWH_T_CH1, 8);
+        verse(IWH_T_V2);
+        chorus(IWH_T_CH2, 8);
+
+        // BRIDGE — "I can't hide"
+        c.section(IWH_T_BRIDGE, IWH_BPM);
+        for (let i = 0; i < 6; i++) {
+          if (i % 2 === 0) { c.hold(b(i), 2, 2); c.tap(b(i) + 3, 0); }
+          else c.pattern(b(i), '1.3.', 1);
+        }
+        c.boost(b(6), 0);
+        c.tap(b(6) + 1, 1); c.tap(b(6) + 2, 2); c.tap(b(6) + 3, 3);
+        c.pattern(b(7), '0123', 1);
+        c.pattern(b(8), '0123', 1);
+
+        verse(IWH_T_V3);
+        chorus(IWH_T_CH3, 8);
+
+        // OUTRO
+        c.section(IWH_T_OUTRO, IWH_BPM);
+        for (let i = 0; i < 5; i++) {
+          if (i % 2 === 0) {
+            c.tap(b(i), 0);
+            c.tap(b(i) + 1, 1);
+            c.hold(b(i) + 2, 3, 1.5);
+          } else {
+            c.pattern(b(i), '2.1.0.', 0.5);
+          }
+        }
+        c.pattern(b(5), '3210', 0.5);
+        c.hold(b(6), 0, 4);
+        c.boost(b(6), 3);
 
         return notes.sort((a, b2) => a.time - b2.time);
       }
@@ -1791,8 +2307,8 @@
         if (!state.feverActive) state.fever = clamp(state.fever + 0.6, 0, 100);
         spawnHoldTickParticles(note.lane);
         if (note.ticksAwarded % 2 === 0) {
-          const scale = [261.63, 293.66, 329.63, 349.23];
-          playTone(scale[note.lane % scale.length] * 2, 0.05, 0.05, 'sine');
+          // palm-mute chug grave (pista 0 = E2 ~82 Hz)
+          playPluck(GUITAR_TUNING[note.lane % 4] / 2, { dur: 0.07, vol: 0.07, bright: 900, q: 0.7, detune: 0 });
         }
       }
 
@@ -1811,8 +2327,8 @@
         state.pulse = Math.max(state.pulse, 0.8);
         state.floatingTexts.push({ text: `+${Math.round(bonus)} SEGUROU!`, lane: note.lane, born: nowSec(), life: 0.85, quality: 'hold' });
         spawnHitParticles(note.lane, 'perfect');
-        playTone(659.25, 0.2, 0.12, 'triangle');
-        playTone(1318.5, 0.26, 0.07, 'sine');
+        playPluck(GUITAR_TUNING[note.lane % GUITAR_TUNING.length] * 2, { dur: 0.35, vol: 0.13, bright: 4200 });
+        playTone(1318.5, 0.26, 0.06, 'sine');
       }
 
       function breakHold(note) {
@@ -2256,29 +2772,36 @@
         ctx.shadowOffsetX = 14;
         ctx.shadowOffsetY = 14;
         ctx.fillStyle = '#0b0e0f';
-        ctx.fillRect(-255, 15, 520, 112);
+        ctx.fillRect(-290, 15, 590, 112);
         ctx.shadowColor = 'transparent';
         ctx.fillStyle = '#f2f0e8';
         ctx.beginPath();
-        ctx.moveTo(-275, 0); ctx.lineTo(270, -10); ctx.lineTo(255, 110); ctx.lineTo(-290, 120); ctx.closePath();
+        ctx.moveTo(-310, 0); ctx.lineTo(305, -10); ctx.lineTo(290, 110); ctx.lineTo(-325, 120); ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,.5)';
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.fillStyle = '#101314';
-        ctx.font = '900 74px Impact, Arial Black, sans-serif';
+        const LOGO_TEXT = 'OPEN RIFF HEROES';
+        ctx.font = '900 62px Impact, Arial Black, sans-serif';
+        const logoW = ctx.measureText(LOGO_TEXT).width;
+        if (logoW > 560) ctx.font = `900 ${Math.floor(62 * 560 / logoW)}px Impact, Arial Black, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('PIANO HERO', -10, 57);
+        ctx.fillText(LOGO_TEXT, -10, 57);
 
-        // crown / piano bars
+        // ornamento: headstock de guitarra (cordas + tarraxas)
         ctx.fillStyle = '#15191b';
         ctx.beginPath();
         ctx.moveTo(-54, -20); ctx.lineTo(36, -24); ctx.lineTo(45, 10); ctx.lineTo(-62, 14); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#f0ad3e';
+        const stringHeights = [38, 50, 44, 36];
         for (let i = 0; i < 4; i++) {
-          const h = [32, 45, 39, 31][i];
-          fillRoundRect(-39 + i * 20, -13 - h, 10, h, 3, '#f0ad3e');
+          const h = stringHeights[i];
+          fillRoundRect(-36 + i * 20, -13 - h, 4, h, 2, '#f0ad3e');
+          ctx.fillStyle = '#f0ad3e';
+          ctx.beginPath();
+          ctx.arc(-34 + i * 20 + (i < 2 ? -7 : 7), -16 - h, 4.5, 0, TWO_PI);
+          ctx.fill();
         }
         ctx.restore();
       }
@@ -2459,6 +2982,113 @@
             ctx.beginPath(); ctx.arc(x + seed() * w, y + h * (0.1 + seed() * 0.5), 0.8 + seed() * 1.4, 0, TWO_PI); ctx.fill();
           }
           ctx.globalAlpha = 1;
+        } else if (style.motif === 'sunrays') {
+          // sol nascendo no horizonte
+          ctx.fillStyle = '#140d06';
+          ctx.fillRect(x, y + h * 0.66, w, h * 0.34);
+          const scx = x + w * 0.5, scy = y + h * 0.62, sr = w * 0.22;
+          ctx.strokeStyle = style.accent;
+          ctx.globalAlpha = 0.7;
+          ctx.lineWidth = Math.max(2, w * 0.02);
+          for (let i = 0; i < 7; i++) {
+            const a = Math.PI + (i / 6) * Math.PI;
+            ctx.beginPath();
+            ctx.moveTo(scx + Math.cos(a) * sr * 1.15, scy + Math.sin(a) * sr * 1.15);
+            ctx.lineTo(scx + Math.cos(a) * sr * 1.7, scy + Math.sin(a) * sr * 1.7);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = style.accent;
+          ctx.beginPath(); ctx.arc(scx, scy, sr, Math.PI, 0); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#fff3d0';
+          ctx.beginPath(); ctx.arc(scx, scy - sr * 0.25, w * 0.08, Math.PI, 0); ctx.closePath(); ctx.fill();
+        } else if (style.motif === 'crossing') {
+          // faixa de pedestres da Abbey Road em leve perspectiva
+          ctx.fillStyle = '#101214';
+          ctx.fillRect(x, y + h * 0.34, w, h * 0.66);
+          ctx.fillStyle = style.accent;
+          ctx.globalAlpha = 0.85;
+          for (let i = 0; i < 4; i++) {
+            const yy = y + h * (0.45 + i * 0.14);
+            const inset = w * (0.16 - i * 0.04);
+            ctx.beginPath();
+            ctx.moveTo(x + inset, yy);
+            ctx.lineTo(x + w - inset, yy);
+            ctx.lineTo(x + w - inset + w * 0.03, yy + h * 0.07);
+            ctx.lineTo(x + inset - w * 0.03, yy + h * 0.07);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        } else if (style.motif === 'weeps') {
+          // silhueta de guitarra + lágrima
+          const gx = x + w * 0.42, gy = y + h * 0.62;
+          ctx.strokeStyle = style.accent;
+          ctx.lineWidth = Math.max(2, w * 0.022);
+          ctx.beginPath(); ctx.ellipse(gx, gy, w * 0.16, h * 0.14, 0, 0, TWO_PI); ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(gx, gy - h * 0.1, w * 0.12, h * 0.1, 0, 0, TWO_PI); ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(gx + w * 0.08, gy - h * 0.17);
+          ctx.lineTo(gx + w * 0.32, gy - h * 0.42);
+          ctx.stroke();
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.7;
+          for (let i = -1; i <= 1; i++) {
+            ctx.beginPath();
+            ctx.moveTo(gx + w * (0.06 + i * 0.015), gy - h * 0.15);
+            ctx.lineTo(gx + w * (0.3 + i * 0.015), gy - h * 0.4);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = style.accent;
+          ctx.beginPath();
+          ctx.moveTo(gx, gy + h * 0.2);
+          ctx.quadraticCurveTo(gx + w * 0.045, gy + h * 0.28, gx, gy + h * 0.32);
+          ctx.quadraticCurveTo(gx - w * 0.045, gy + h * 0.28, gx, gy + h * 0.2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        } else if (style.motif === 'twist') {
+          // espiral do twist
+          const tcx = x + w * 0.5, tcy = y + h * 0.5;
+          ctx.strokeStyle = style.accent;
+          ctx.globalAlpha = 0.8;
+          ctx.lineWidth = Math.max(2.5, w * 0.03);
+          ctx.beginPath();
+          ctx.moveTo(tcx, tcy);
+          for (let a = 0; a < 22; a += 0.35) {
+            ctx.lineTo(tcx + Math.cos(a) * a * w * 0.012, tcy + Math.sin(a) * a * w * 0.012);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#fff3d0';
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath(); ctx.arc(x + seed() * w, y + seed() * h, 1.2 + seed() * 1.8, 0, TWO_PI); ctx.fill();
+          }
+        } else if (style.motif === 'hand') {
+          // duas mãos se alcançando + coração
+          for (const [side, color] of [[-1, '#f2eee5'], [1, style.accent]]) {
+            const hx = x + w * (0.5 + side * 0.32);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(hx, y + h * 1.02);
+            ctx.quadraticCurveTo(hx - side * w * 0.1, y + h * 0.7, x + w * (0.5 + side * 0.09), y + h * 0.52);
+            ctx.quadraticCurveTo(x + w * (0.5 + side * 0.16), y + h * 0.46, x + w * (0.5 + side * 0.18), y + h * 0.56);
+            ctx.quadraticCurveTo(hx + side * w * 0.08, y + h * 0.78, hx + side * w * 0.14, y + h * 1.02);
+            ctx.closePath();
+            ctx.fill();
+          }
+          const hcx = x + w * 0.5, hcy = y + h * 0.3;
+          ctx.fillStyle = style.accent;
+          ctx.beginPath();
+          ctx.arc(hcx - w * 0.045, hcy, w * 0.05, 0, TWO_PI);
+          ctx.arc(hcx + w * 0.045, hcy, w * 0.05, 0, TWO_PI);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(hcx - w * 0.09, hcy + w * 0.02);
+          ctx.lineTo(hcx, hcy + w * 0.14);
+          ctx.lineTo(hcx + w * 0.09, hcy + w * 0.02);
+          ctx.closePath();
+          ctx.fill();
         } else if (style.motif === 'moon') {
           ctx.fillStyle = style.accent;
           ctx.globalAlpha = 0.85;

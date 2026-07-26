@@ -793,23 +793,23 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         state.viewW = rect.width;
         state.viewH = rect.height;
-        state.scale = Math.min(rect.width / DESIGN_W, rect.height / DESIGN_H);
-        state.offsetX = (rect.width - DESIGN_W * state.scale) / 2;
-        state.offsetY = (rect.height - DESIGN_H * state.scale) / 2;
+        // A cena estica para preencher a viewport inteira (sem letterbox).
+        // Em 16:9 a escala é uniforme; em outras proporções estica levemente.
+        state.scaleX = rect.width / DESIGN_W;
+        state.scaleY = rect.height / DESIGN_H;
       }
 
       function toDesign(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
         return {
-          x: (clientX - rect.left - state.offsetX) / state.scale,
-          y: (clientY - rect.top - state.offsetY) / state.scale
+          x: (clientX - rect.left) / state.scaleX,
+          y: (clientY - rect.top) / state.scaleY
         };
       }
 
       function beginScene() {
         ctx.save();
-        ctx.translate(state.offsetX, state.offsetY);
-        ctx.scale(state.scale, state.scale);
+        ctx.scale(state.scaleX, state.scaleY);
       }
 
       function endScene() { ctx.restore(); }
@@ -3159,21 +3159,14 @@
         ctx.fillStyle = '#080909';
         ctx.fillRect(0, 0, state.viewW, state.viewH);
 
-        // Fundo em modo "cover": o palco preenche a tela inteira (sem barras pretas),
-        // enquanto o gameplay continua na proporção 16:9 centralizada.
-        ctx.save();
-        const coverScale = Math.max(state.viewW / DESIGN_W, state.viewH / DESIGN_H);
-        ctx.translate((state.viewW - DESIGN_W * coverScale) / 2, (state.viewH - DESIGN_H * coverScale) / 2);
-        ctx.scale(coverScale, coverScale);
-        drawStageBackground();
-        ctx.restore();
-
         beginScene();
 
         const shakeX = state.shake ? (Math.random() - 0.5) * 8 * state.shake : 0;
         const shakeY = state.shake ? (Math.random() - 0.5) * 5 * state.shake : 0;
         ctx.save();
         ctx.translate(shakeX, shakeY);
+
+        drawStageBackground();
 
         if (state.screen === 'title') {
           drawTitle();

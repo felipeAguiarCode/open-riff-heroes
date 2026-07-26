@@ -3158,14 +3158,22 @@
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = '#080909';
         ctx.fillRect(0, 0, state.viewW, state.viewH);
+
+        // Fundo em modo "cover": o palco preenche a tela inteira (sem barras pretas),
+        // enquanto o gameplay continua na proporção 16:9 centralizada.
+        ctx.save();
+        const coverScale = Math.max(state.viewW / DESIGN_W, state.viewH / DESIGN_H);
+        ctx.translate((state.viewW - DESIGN_W * coverScale) / 2, (state.viewH - DESIGN_H * coverScale) / 2);
+        ctx.scale(coverScale, coverScale);
+        drawStageBackground();
+        ctx.restore();
+
         beginScene();
 
         const shakeX = state.shake ? (Math.random() - 0.5) * 8 * state.shake : 0;
         const shakeY = state.shake ? (Math.random() - 0.5) * 5 * state.shake : 0;
         ctx.save();
         ctx.translate(shakeX, shakeY);
-
-        drawStageBackground();
 
         if (state.screen === 'title') {
           drawTitle();
@@ -3405,7 +3413,7 @@
 
         ctx.fillStyle = 'rgba(255,255,255,.52)';
         ctx.font = '600 14px Arial, sans-serif';
-        ctx.fillText('ENTER para começar  •  MÚSICA via YouTube  •  ⛶ tela cheia', 800, 830);
+        ctx.fillText('ENTER para começar  •  MÚSICA via YouTube  •  T tela cheia', 800, 830);
       }
 
       // ---------- Seleção de música (estilo Guitar Hero) ----------
@@ -4491,7 +4499,7 @@
         const value = remaining > 0.5 ? Math.ceil(remaining) : 'GO!';
         ctx.save();
         ctx.fillStyle = 'rgba(0,0,0,.24)';
-        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+        ctx.fillRect(-1000, -600, DESIGN_W + 2000, DESIGN_H + 1200); // cobre também o bleed do fundo
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.shadowColor = '#f0a83b';
@@ -4511,7 +4519,7 @@
 
       function drawPauseOverlay() {
         ctx.fillStyle = 'rgba(4,6,7,.78)';
-        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+        ctx.fillRect(-1000, -600, DESIGN_W + 2000, DESIGN_H + 1200);
         fillRoundRect(540, 275, 520, 360, 24, 'rgba(16,20,21,.96)');
         strokeRoundRect(540, 275, 520, 360, 24, 'rgba(255,255,255,.16)', 2);
         ctx.textAlign = 'center';
@@ -4543,7 +4551,7 @@
 
       function drawResultOverlay() {
         ctx.fillStyle = 'rgba(4,6,7,.82)';
-        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+        ctx.fillRect(-1000, -600, DESIGN_W + 2000, DESIGN_H + 1200);
         fillRoundRect(395, 126, 810, 650, 28, 'rgba(15,19,20,.97)');
         strokeRoundRect(395, 126, 810, 650, 28, state.resultWon ? 'rgba(243,174,58,.55)' : 'rgba(227,74,91,.5)', 3);
 
@@ -4684,6 +4692,12 @@
         if (e.repeat) return;
         const key = e.key === ';' ? ';' : e.key.toUpperCase();
 
+        // T alterna tela cheia em qualquer tela ('F' é tecla de pista, por isso T)
+        if (key === 'T') {
+          toggleFullscreen();
+          return;
+        }
+
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', ' ', 'Escape'].includes(e.key)) e.preventDefault();
 
         if (state.screen === 'title') {
@@ -4808,12 +4822,14 @@
         setupAudio();
         setMuted(!state.muted);
       });
-      fullscreenBtn.addEventListener('click', async () => {
+      async function toggleFullscreen() {
         try {
           if (!document.fullscreenElement) await shell.requestFullscreen();
           else await document.exitFullscreen();
         } catch (_) {}
-      });
+      }
+
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
 
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && state.screen === 'playing') pauseGame();

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Piano Hero — MVP Jogável</title>
+  <title>Piano Hero</title>
   <style>
     :root {
       color-scheme: dark;
@@ -88,6 +88,17 @@
       clip: rect(0 0 0 0);
       white-space: nowrap;
     }
+
+    #yt-wrap {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 2px;
+      height: 2px;
+      overflow: hidden;
+      opacity: .01;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -98,9 +109,9 @@
       <button class="icon-btn" id="muteBtn" type="button" title="Ativar ou desativar áudio">ÁUDIO</button>
       <button class="icon-btn" id="fullscreenBtn" type="button" title="Tela cheia">⛶</button>
     </div>
-    <div id="sr-status" aria-live="polite">Pressione Enter para iniciar.</div>
+    <div id="sr-status" aria-live="polite">Pressione Enter para começar.</div>
   </main>
-
+  <div id="yt-wrap" aria-hidden="true"><div id="yt-audio"></div></div>
   <script>
     (() => {
       'use strict';
@@ -116,62 +127,120 @@
       const DESIGN_W = 1600;
       const DESIGN_H = 900;
       const TWO_PI = Math.PI * 2;
-      const SONG_DURATION = 48;
-      const BPM = 120;
-      const BEAT = 60 / BPM;
       const APPROACH_TIME = 2.9;
       const WINDOWS = { perfect: 0.055, great: 0.095, good: 0.145, miss: 0.17 };
+      const COUNTDOWN_SEC = 3.2;
 
-      const MODES = [
+      const HOLD_TICK_BEATS = 0.25;
+      const HOLD_TICK_BASE = 10;
+      const HOLD_COMPLETE_BASE = 50;
+      const HOLD_RELEASE_TOL = 0.12;
+      const HOLD_MIN_DURATION = 0.4;
+      const BOOST_DURATION = 7;
+      const BOOST_MULT = 2;
+      const PARTICLE_CAP = 220;
+
+      const boostPalette = { light: '#8ff7ff', main: '#00eaff', deep: '#0066ff', dark: '#003c99', glow: 'rgba(0,234,255,.9)' };
+
+      const lanePalette = [
+        { main: '#00e5c8', light: '#7dffe9', dark: '#00745f', glow: 'rgba(0,229,200,.85)' },
+        { main: '#00cdbb', light: '#66f2e4', dark: '#00655c', glow: 'rgba(0,205,187,.85)' },
+        { main: '#00b3a0', light: '#54e0d0', dark: '#005a50', glow: 'rgba(0,179,160,.85)' },
+        { main: '#ffb300', light: '#ffe066', dark: '#8f5e00', glow: 'rgba(255,179,0,.85)' },
+        { main: '#a855f7', light: '#d8b4fe', dark: '#5b21b6', glow: 'rgba(168,85,247,.85)' },
+        { main: '#c026d3', light: '#f0abfc', dark: '#701a75', glow: 'rgba(192,38,211,.85)' },
+        { main: '#8b5cf6', light: '#c4b5fd', dark: '#4c1d95', glow: 'rgba(139,92,246,.85)' },
+        { main: '#94a3b8', light: '#e2e8f0', dark: '#475569', glow: 'rgba(148,163,184,.7)' }
+      ];
+
+      // ---- Músicas (calibráveis contra as gravações reais) ----
+      const MOONLIGHT_QUARTER_BPM = 54;   // pulso de semínima do adagio
+      const MOONLIGHT_BARS = 78;          // compassos 2/2 mapeados (12 tercinas por compasso)
+      const MICKEY_BPM = 170;             // eurobeat four-on-the-floor
+      const MICKEY_BARS = 68;
+
+      const SONGS = [
         {
-          id: 'normal',
-          name: 'NORMAL',
-          subtitle: '4 TECLAS',
+          id: 'moonlight',
+          title: 'MOONLIGHT SONATA',
+          subtitle: '1º MOVIMENTO',
+          panelTitle: ['MOONLIGHT', 'SONATA'],
+          artist: 'L. VAN BEETHOVEN',
+          genre: 'CLÁSSICO',
+          genreColor: '#2c8ab2',
+          youtubeId: '4591dCHe_sE',
+          bpm: MOONLIGHT_QUARTER_BPM,
+          gridBpm: MOONLIGHT_QUARTER_BPM * 3, // grade = colcheias de tercina
+          beatsPerBar: 12,
+          offsetMs: 0,
+          startAtSec: 0,
+          endAtSec: Math.round(MOONLIGHT_BARS * (240 / MOONLIGHT_QUARTER_BPM)) + 3,
           keys: ['D', 'F', 'J', 'K'],
-          minAccuracy: 0.62,
-          density: 0.77,
-          label: 'Ideal para começar'
+          difficulty: 2,
+          minAccuracy: 0.6,
+          coverStyle: { bg1: '#0c1a3a', bg2: '#1d2f63', accent: '#9db8ff', motif: 'moon' },
+          chartBuilder: buildMoonlightChart
         },
         {
-          id: 'hard',
-          name: 'HARD',
-          subtitle: '8 TECLAS',
-          keys: ['A', 'S', 'D', 'F', 'J', 'K', 'L', ';'],
-          minAccuracy: 0.72,
-          density: 1,
-          label: 'Experiência completa'
+          id: 'mickey',
+          title: 'MICKEY MOUSE MARCH',
+          subtitle: 'EUROBEAT VERSION',
+          panelTitle: ['MICKEY', 'MOUSE MARCH'],
+          artist: 'DDR DISNEY MIX',
+          genre: 'EUROBEAT',
+          genreColor: '#c2183a',
+          youtubeId: '2IF8IdRLdAM',
+          bpm: MICKEY_BPM,
+          gridBpm: MICKEY_BPM,               // grade = semínimas
+          beatsPerBar: 4,
+          offsetMs: 0,
+          startAtSec: 0,
+          endAtSec: Math.round(MICKEY_BARS * (240 / MICKEY_BPM)) + 2,
+          keys: ['D', 'F', 'J', 'K'],
+          difficulty: 4,
+          minAccuracy: 0.65,
+          coverStyle: { bg1: '#3a0a12', bg2: '#c2183a', accent: '#ffd23b', motif: 'ears' },
+          chartBuilder: buildMickeyChart
         }
       ];
 
-      const lanePalette = [
-        { main: '#2b99c9', light: '#67c9ef', dark: '#15516d' },
-        { main: '#2787b2', light: '#5db8dd', dark: '#144a62' },
-        { main: '#1f718f', light: '#55a9c5', dark: '#113d4f' },
-        { main: '#e6a32f', light: '#ffc65a', dark: '#805510' },
-        { main: '#7650a1', light: '#a47bd2', dark: '#41275d' },
-        { main: '#8552b2', light: '#b27ee2', dark: '#4b286b' },
-        { main: '#714795', light: '#9d71c4', dark: '#3e2552' },
-        { main: '#55545b', light: '#8b8992', dark: '#2e2d31' }
-      ];
+      function currentSong() { return SONGS[state.songIndex]; }
+      function songLength(song) { return song.endAtSec - song.startAtSec; }
+      function songBeat(song) { return 60 / song.bpm; }
+      function getBeatSec() { return songBeat(currentSong()); }
 
-      function readHighScore() {
-        try { return Number(localStorage.getItem('pianoHeroHighScore') || 0); }
+      function readHighScore(songId) {
+        try { return Number(localStorage.getItem('pianoHero.high.' + songId) || 0); }
         catch (_) { return 0; }
       }
 
-      function saveHighScore(value) {
-        try { localStorage.setItem('pianoHeroHighScore', String(value)); }
+      function saveHighScore(songId, value) {
+        try { localStorage.setItem('pianoHero.high.' + songId, String(value)); }
+        catch (_) {}
+      }
+
+      function readCalib(songId) {
+        try { return Number(localStorage.getItem('pianoHero.offset.' + songId) || 0); }
+        catch (_) { return 0; }
+      }
+
+      function saveCalib(songId, ms) {
+        try { localStorage.setItem('pianoHero.offset.' + songId, String(ms)); }
         catch (_) {}
       }
 
       const state = {
-        screen: 'menu',
-        modeIndex: 1,
+        screen: 'title',
+        songIndex: 0,
+        selectIndex: 0,
         chart: [],
+        chartCursor: 0,
         particles: [],
         floatingTexts: [],
         keysDown: new Set(),
         activeKeyFlash: new Map(),
+        activeHolds: new Map(),
+        holdGraceUntil: 0,
         score: 0,
         combo: 0,
         maxCombo: 0,
@@ -183,11 +252,12 @@
         feverActive: false,
         feverEndsAt: 0,
         feverDuration: 8,
+        boostActive: false,
+        boostEndsAt: 0,
         songStart: 0,
         pausedAt: 0,
         totalPaused: 0,
         lastFrame: performance.now(),
-        lastBeat: -1,
         countdown: 3,
         feedback: '',
         feedbackSub: '',
@@ -200,7 +270,11 @@
         masterGain: null,
         resultRank: '—',
         resultWon: false,
-        highScore: readHighScore(),
+        highScore: 0,
+        calibMs: 0,
+        pendingStart: null,
+        awaitingAudio: false,
+        toast: null,
         hoverTarget: null,
         mouse: { x: 0, y: 0 }
       };
@@ -211,6 +285,8 @@
       function easeInQuad(t) { return t * t; }
       function formatScore(value) { return Math.max(0, Math.floor(value)).toLocaleString('en-US'); }
       function nowSec() { return performance.now() / 1000; }
+      function neonPulse() { return 0.85 + 0.15 * Math.sin(nowSec() * 2.2); }
+      function fmtMult(m) { return String(parseFloat(m.toFixed(2))); }
 
       function seededRandom(seed) {
         let x = seed >>> 0;
@@ -295,6 +371,7 @@
         if (state.masterGain) {
           state.masterGain.gain.setTargetAtTime(muted ? 0 : 0.5, state.audioCtx.currentTime, 0.02);
         }
+        yt.setMuted(muted);
         muteBtn.textContent = muted ? 'MUDO' : 'ÁUDIO';
       }
 
@@ -362,63 +439,365 @@
         src.start(t);
       }
 
-      function generateChart(mode) {
-        const rand = seededRandom(mode.id === 'hard' ? 8142026 : 4122026);
-        const notes = [];
-        const lanes = mode.keys.length;
-        let previousLane = Math.floor(lanes / 2);
-        let sequenceDirection = 1;
+      // ==================== YouTube (somente áudio) ====================
 
-        const startBeat = 4;
-        const totalBeats = Math.floor(SONG_DURATION / BEAT) - 2;
-
-        for (let beat = startBeat; beat < totalBeats; beat++) {
-          const section = Math.floor(beat / 16);
-          const intensity = clamp(0.58 + section * 0.07, 0.58, 0.96);
-          const isStrong = beat % 4 === 0;
-          const isFill = beat % 16 >= 12;
-          const chance = mode.density * (isStrong ? 1 : intensity);
-
-          if (rand() < chance) {
-            let lane;
-            if (beat % 8 === 0) {
-              lane = Math.floor(rand() * lanes);
-              sequenceDirection = rand() > 0.5 ? 1 : -1;
-            } else if (isFill && rand() < 0.68) {
-              lane = clamp(previousLane + sequenceDirection, 0, lanes - 1);
-              if (lane === 0 || lane === lanes - 1) sequenceDirection *= -1;
+      const yt = {
+        player: null,
+        ready: false,
+        primed: false,
+        blocked: {},
+        currentId: null,
+        init() {
+          // O IIFE não expõe nada no window; a API exige o callback global.
+          window.onYouTubeIframeAPIReady = () => {
+            const vars = { controls: 0, disablekb: 1, rel: 0, playsinline: 1, iv_load_policy: 3 };
+            if (location.protocol.indexOf('http') === 0) vars.origin = location.origin;
+            yt.player = new YT.Player('yt-audio', {
+              width: 2,
+              height: 2,
+              playerVars: vars,
+              events: { onReady: yt.onReady, onStateChange: yt.onStateChange, onError: yt.onError }
+            });
+          };
+          const s = document.createElement('script');
+          s.src = 'https://www.youtube.com/iframe_api';
+          s.async = true;
+          document.head.appendChild(s);
+        },
+        onReady() {
+          yt.ready = true;
+          if (state.pendingStart != null && state.screen === 'songSelect') {
+            const i = state.pendingStart;
+            state.pendingStart = null;
+            startSong(i);
+          }
+        },
+        load(song) {
+          if (!yt.player) return;
+          yt.currentId = song.id;
+          yt.primed = false;
+          try {
+            yt.player.mute(); // priming silencioso durante o countdown
+            yt.player.loadVideoById({ videoId: song.youtubeId, startSeconds: song.startAtSec });
+          } catch (_) {}
+        },
+        play() { try { yt.player.playVideo(); } catch (_) {} },
+        pause() { try { yt.player.pauseVideo(); } catch (_) {} },
+        seek(s) { try { yt.player.seekTo(s, true); } catch (_) {} },
+        setMuted(m) { try { m ? yt.player.mute() : yt.player.unMute(); } catch (_) {} },
+        getTime() { try { return yt.player.getCurrentTime() || 0; } catch (_) { return 0; } },
+        onStateChange(e) {
+          const S = window.YT.PlayerState;
+          if (e.data === S.PLAYING) {
+            if (!yt.primed && (state.screen === 'countdown' || state.screen === 'paused')) {
+              // Buffer pronto: estaciona no início e libera o volume.
+              yt.pause();
+              yt.seek(currentSong().startAtSec);
+              yt.primed = true;
+              if (!state.muted) yt.setMuted(false);
+            } else if (state.screen === 'playing') {
+              if (!yt.primed) {
+                yt.primed = true;
+                if (!state.muted) yt.setMuted(false);
+              }
+              clockOnPlaying(yt.getTime());
             } else {
-              const jump = rand() < 0.72 ? (rand() < 0.5 ? -1 : 1) : Math.floor(rand() * lanes) - previousLane;
-              lane = clamp(previousLane + jump, 0, lanes - 1);
+              yt.pause(); // nada deve tocar fora do gameplay
             }
-
-            notes.push({ time: beat * BEAT, lane, hit: false, missed: false, quality: null });
-            previousLane = lane;
+          } else if (e.data === S.BUFFERING && state.screen === 'playing') {
+            clockFreeze();
+          } else if (e.data === S.ENDED && state.screen === 'playing') {
+            endGame(false);
           }
-
-          if (section >= 1 && rand() < 0.28 * mode.density) {
-            const subLane = clamp(previousLane + (rand() < 0.5 ? -1 : 1), 0, lanes - 1);
-            notes.push({ time: beat * BEAT + BEAT / 2, lane: subLane, hit: false, missed: false, quality: null });
-            previousLane = subLane;
+        },
+        onError(e) {
+          if (yt.currentId) yt.blocked[yt.currentId] = e.data;
+          if (state.screen === 'countdown' || state.screen === 'playing') {
+            state.screen = 'songSelect';
+            showToast('Não foi possível reproduzir este vídeo. Escolha outra música.', 3500);
+            srStatus.textContent = 'Erro ao carregar o vídeo. Escolha outra música.';
           }
+        }
+      };
 
-          if (mode.id === 'hard' && section >= 2 && beat % 8 === 6 && rand() < 0.6) {
-            let second = Math.floor(rand() * lanes);
-            if (second === previousLane) second = (second + 2) % lanes;
-            notes.push({ time: beat * BEAT + BEAT / 2, lane: second, hit: false, missed: false, quality: null });
+      // Clock híbrido: extrapolação por performance.now() re-ancorada em getCurrentTime()
+      const clock = {
+        anchored: false,
+        frozen: false,
+        frozenValue: 0,
+        frozenAtPerf: 0,
+        aMedia: 0,
+        aPerf: 0,
+        rate: 1,
+        lastPoll: 0
+      };
+      const CLOCK_POLL = 0.25;
+      const CLOCK_SLEW_GAIN = 1.0;
+      const CLOCK_MAX_SLEW = 0.04;  // corrige no máx. 40 ms por segundo — imperceptível
+      const CLOCK_HARD_SNAP = 0.30; // acima disso, salto direto (início/seek/rebuffer)
+
+      function clockReset() {
+        clock.anchored = false;
+        clock.frozen = false;
+        clock.rate = 1;
+        clock.lastPoll = 0;
+      }
+
+      function clockOnPlaying(mediaT) {
+        clock.aMedia = mediaT;
+        clock.aPerf = nowSec();
+        clock.rate = 1;
+        clock.anchored = true;
+        clock.frozen = false;
+        state.awaitingAudio = false;
+      }
+
+      function clockFreeze() {
+        if (clock.frozen) return;
+        clock.frozenValue = currentSongTime();
+        clock.frozen = true;
+        clock.frozenAtPerf = nowSec();
+      }
+
+      function clockUpdate() {
+        if (!clock.anchored || clock.frozen) return;
+        const now = nowSec();
+        if (now - clock.lastPoll < CLOCK_POLL) return;
+        clock.lastPoll = now;
+        const poll = yt.getTime();
+        const est = clock.aMedia + (now - clock.aPerf) * clock.rate;
+        const drift = poll - est;
+        if (Math.abs(drift) > CLOCK_HARD_SNAP) {
+          clock.aMedia = poll;
+          clock.aPerf = now;
+          clock.rate = 1;
+        } else {
+          clock.aMedia = est;
+          clock.aPerf = now;
+          clock.rate = 1 + clamp(drift * CLOCK_SLEW_GAIN, -CLOCK_MAX_SLEW, CLOCK_MAX_SLEW);
+        }
+      }
+
+      function clockSongTime() {
+        const song = currentSong();
+        const media = clock.aMedia + (nowSec() - clock.aPerf) * clock.rate;
+        // Offset positivo adianta as notas em relação ao áudio (tecla '.').
+        return (media - song.startAtSec) + (song.offsetMs + state.calibMs) / 1000;
+      }
+
+      // ==================== Charts ====================
+
+      function makeNote(time, lane, type, duration) {
+        return { time, lane, type, duration, hit: false, missed: false, quality: null };
+      }
+
+      function chartBuilderApi(song, notes) {
+        const spb = 60 / song.gridBpm;
+        let shiftSec = 0;
+        const at = beat => beat * spb + shiftSec;
+        return {
+          tap(beat, lane) { notes.push(makeNote(at(beat), lane, 'tap', 0)); },
+          hold(beat, lane, durBeats) { notes.push(makeNote(at(beat), lane, 'hold', durBeats * spb)); },
+          boost(beat, lane) { notes.push(makeNote(at(beat), lane, 'boost', 0)); },
+          pattern(startBeat, seq, step = 1, reps = 1) {
+            let b = startBeat;
+            for (let r = 0; r < reps; r++) {
+              for (const ch of seq) {
+                if (ch !== '.') this.tap(b, +ch);
+                b += step;
+              }
+            }
+            return b;
+          },
+          shift(sec) { shiftSec += sec; }, // re-sync de rubato por seção
+          bar: n => n * song.beatsPerBar
+        };
+      }
+
+      // Moonlight Sonata, 1º movimento — compasso 2/2, 12 colcheias de tercina por compasso.
+      // Ostinato G#–C#–E vira ciclos nas pistas 0-2; a melodia sustentada vive na pista 3.
+      function buildMoonlightChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+
+        // Intro pp (0–3)
+        for (let i = 0; i < 4; i++) c.pattern(b(i), '012012', 2);
+
+        // Tema A (4–13): ostinato + melodia em holds na pista 3
+        for (let i = 4; i < 14; i++) c.pattern(b(i), i % 2 ? '120120' : '012012', 2);
+        for (const i of [4, 6, 10, 12]) { // o compasso 8 recebe boost no lugar
+          c.tap(b(i) - 2, 3);
+          c.tap(b(i) - 1, 3);
+          c.hold(b(i), 3, 6);
+        }
+
+        // Tema B no baixo (14–22)
+        for (let i = 14; i < 23; i++) c.pattern(b(i), '123123', 2);
+        for (const i of [15, 17, 19, 21]) c.hold(b(i), 0, 4);
+
+        // Desenvolvimento em crescendo (23–31): tercinas contínuas
+        for (let i = 23; i < 32; i++) c.pattern(b(i), i % 2 ? '321321321321' : '012012012012', 1);
+
+        // Clímax (32–39): runs descendentes fechando cada frase
+        for (let i = 32; i < 40; i++) {
+          if ((i - 32) % 4 === 3) {
+            c.pattern(b(i), '01201201', 1);
+            c.pattern(b(i) + 8, '3210', 1);
+          } else {
+            c.pattern(b(i), '012012012012', 1);
           }
         }
 
-        return notes.sort((a, b) => a.time - b.time);
+        // Recapitulação (40–51)
+        for (let i = 40; i < 52; i++) c.pattern(b(i), i % 2 ? '120120' : '012012', 2);
+        for (const i of [42, 44, 46, 48, 50]) { // o compasso 40 recebe boost no lugar
+          c.tap(b(i) - 2, 3);
+          c.tap(b(i) - 1, 3);
+          c.hold(b(i), 3, 6);
+        }
+
+        // Coda (52–63): frases com respiração
+        for (let i = 52; i < 64; i++) c.pattern(b(i), '012.012.012.', 1);
+        for (const i of [54, 58, 62]) c.hold(b(i), 3, 6);
+
+        // Calando (64–73)
+        for (let i = 64; i < 74; i++) c.pattern(b(i), '012012', 2);
+        for (const i of [65, 69]) c.hold(b(i), 3, 6);
+
+        // Final (74–77): run + acorde sustentado
+        c.pattern(b(74), '012012', 2);
+        c.pattern(b(75), '012012', 2);
+        c.pattern(b(76), '01233210', 1);
+        c.hold(b(77), 0, 10);
+        c.boost(b(77), 3);
+
+        // Boosts nas fronteiras de frase (a cada 8 compassos)
+        const boostBars = [[8, 3], [16, 0], [24, 1], [32, 2], [40, 3], [48, 1], [56, 1], [64, 2], [72, 3]];
+        for (const [bar, lane] of boostBars) c.boost(b(bar), lane);
+
+        return notes.sort((a, b2) => a.time - b2.time);
       }
 
-      function resetRun() {
-        const mode = MODES[state.modeIndex];
-        state.chart = generateChart(mode);
+      // Mickey Mouse March (Eurobeat) — 4/4 four-on-the-floor, refrão com colcheias off-beat.
+      function buildMickeyChart(song) {
+        const notes = [];
+        const c = chartBuilderApi(song, notes);
+        const b = c.bar;
+        const boostHookBars = [34, 38, 42, 46, 58, 62];
+
+        function chorusBar(i, offbeats, boost) {
+          if (boost) c.boost(b(i), 0); else c.tap(b(i), 0);
+          c.tap(b(i) + 1, 2);
+          c.tap(b(i) + 2, 0);
+          c.tap(b(i) + 3, 2);
+          if (offbeats) {
+            c.tap(b(i) + 0.5, 1);
+            c.tap(b(i) + 2.5, 3);
+          }
+        }
+
+        // Compassos 0–1: intro do áudio (sem notas — absorve a latência do player)
+
+        // Riff de introdução (2–9)
+        for (let i = 2; i < 10; i++) c.pattern(b(i), '0213', 1);
+
+        // Verso (10–25)
+        for (let i = 10; i < 26; i++) c.pattern(b(i), i % 2 ? '3132' : '0102', 1);
+        for (const i of [10, 14, 18, 22]) c.hold(b(i) + 2, 1, 1); // stab de synth
+
+        // Pré-refrão (26–33): rampa até as colcheias
+        c.hold(b(26), 2, 2);
+        c.tap(b(26) + 1, 0);
+        c.tap(b(26) + 3, 3);
+        for (let i = 27; i < 32; i++) c.pattern(b(i), '0123', 1);
+        c.pattern(b(32), '0123012.', 0.5);
+        c.pattern(b(33), '3210321.', 0.5);
+
+        // Refrão (34–49)
+        for (let i = 34; i < 50; i++) {
+          const hasHold = i === 41 || i === 49;
+          const off = (i - 34) % 2 === 1 && !hasHold;
+          chorusBar(i, off, boostHookBars.indexOf(i) >= 0);
+          if (hasHold) {
+            c.tap(b(i) + 0.5, 1);
+            c.hold(b(i), 3, 2);
+          }
+        }
+
+        // Ponte em meio-tempo (50–57)
+        for (let i = 50; i < 58; i++) {
+          if (i % 2 === 0) {
+            c.hold(b(i), 0, 2);
+            c.hold(b(i) + 2, 3, 2);
+          } else {
+            c.tap(b(i), 1);
+            c.tap(b(i) + 2, 2);
+          }
+        }
+
+        // Refrão final (58–66): off-beats em todos os compassos
+        for (let i = 58; i < 67; i++) chorusBar(i, true, boostHookBars.indexOf(i) >= 0);
+
+        // Finale (67)
+        c.pattern(b(67), '0123.210', 0.5);
+        c.boost(b(67) + 3.5, 3);
+
+        return notes.sort((a, b2) => a.time - b2.time);
+      }
+
+      function buildRuntimeChart(rawNotes) {
+        return rawNotes.map(raw => {
+          const type = raw.type || 'tap';
+          const duration = type === 'hold' ? Math.max(HOLD_MIN_DURATION, raw.duration || getBeatSec()) : 0;
+          return {
+            time: raw.time,
+            lane: raw.lane,
+            type,
+            duration,
+            endTime: raw.time + duration,
+            hit: false,
+            missed: false,
+            quality: null,
+            holdState: type === 'hold' ? 'waiting' : null,
+            nextTickAt: 0,
+            ticksAwarded: 0
+          };
+        });
+      }
+
+      // ==================== Ciclo de vida da partida ====================
+
+      function toSongSelect() {
+        yt.pause();
+        state.screen = 'songSelect';
+        srStatus.textContent = 'Seleção de músicas.';
+      }
+
+      function startSong(index) {
+        const song = SONGS[index];
+        if (yt.blocked[song.id]) {
+          showToast('Este vídeo não permite reprodução aqui. Escolha outra música.', 3000);
+          return;
+        }
+        if (!yt.ready) {
+          state.pendingStart = index;
+          showToast('Carregando player de áudio…', 2500);
+          return;
+        }
+        setupAudio();
+        state.songIndex = index;
+        state.selectIndex = index;
+        state.highScore = readHighScore(song.id);
+        state.calibMs = readCalib(song.id);
+        state.chart = buildRuntimeChart(song.chartBuilder(song));
+        state.chartCursor = 0;
         state.particles = [];
         state.floatingTexts = [];
         state.keysDown.clear();
         state.activeKeyFlash.clear();
+        state.activeHolds.clear();
+        state.holdGraceUntil = 0;
         state.score = 0;
         state.combo = 0;
         state.maxCombo = 0;
@@ -429,25 +808,28 @@
         state.fever = 0;
         state.feverActive = false;
         state.feverEndsAt = 0;
-        state.songStart = performance.now() / 1000 + 3.2;
+        state.boostActive = false;
+        state.boostEndsAt = 0;
+        state.songStart = nowSec() + COUNTDOWN_SEC;
         state.totalPaused = 0;
         state.pausedAt = 0;
-        state.lastBeat = -1;
+        state.countdown = 4;
         state.feedback = '';
         state.feedbackSub = '';
         state.resultRank = '—';
         state.resultWon = false;
+        state.awaitingAudio = false;
+        state.toast = null;
+        clockReset();
+        yt.load(song);
         state.screen = 'countdown';
-        srStatus.textContent = `Partida iniciada no modo ${mode.name}.`;
-      }
-
-      function startGame() {
-        setupAudio();
-        resetRun();
         canvas.focus();
+        srStatus.textContent = `Iniciando ${song.title}. Prepare-se.`;
       }
 
       function currentSongTime() {
+        if (clock.frozen) return clock.frozenValue;
+        if (clock.anchored) return clockSongTime();
         if (state.screen === 'paused') return state.pausedAt - state.songStart - state.totalPaused;
         return nowSec() - state.songStart - state.totalPaused;
       }
@@ -457,11 +839,21 @@
           state.pausedAt = nowSec();
           state.previousScreen = state.screen;
           state.screen = 'paused';
+          clockFreeze();
+          yt.pause();
           if (state.audioCtx && state.audioCtx.state === 'running') state.audioCtx.suspend();
           srStatus.textContent = 'Jogo pausado.';
         } else if (state.screen === 'paused') {
           state.totalPaused += nowSec() - state.pausedAt;
           state.screen = state.previousScreen || 'playing';
+          state.holdGraceUntil = nowSec() + 0.3;
+          if (state.screen === 'playing' && clock.anchored) {
+            yt.play(); // permanece congelado até o PLAYING real re-ancorar
+          } else if (state.screen === 'countdown') {
+            clock.frozen = false;
+          } else {
+            clock.frozen = false;
+          }
           if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume();
           srStatus.textContent = 'Jogo retomado.';
         }
@@ -469,16 +861,17 @@
 
       function endGame(earlyLoss = false) {
         if (state.screen === 'result') return;
+        finalizeActiveHolds();
+        yt.pause();
         const accuracy = getAccuracy();
-        const mode = MODES[state.modeIndex];
-        state.resultWon = !earlyLoss && accuracy >= mode.minAccuracy;
+        state.resultWon = !earlyLoss && accuracy >= currentSong().minAccuracy;
         state.resultRank = calculateRank(accuracy);
         state.screen = 'result';
         if (state.score > state.highScore) {
           state.highScore = Math.floor(state.score);
-          saveHighScore(state.highScore);
+          saveHighScore(currentSong().id, state.highScore);
         }
-        srStatus.textContent = `${state.resultWon ? 'Vitória' : 'Derrota'}. Pontuação ${formatScore(state.score)}. Precisão ${Math.round(accuracy * 100)} por cento.`;
+        srStatus.textContent = `${state.resultWon ? 'Vitória' : 'Derrota'} em ${currentSong().title}. Pontuação ${formatScore(state.score)}. Precisão ${Math.round(accuracy * 100)} por cento.`;
       }
 
       function getAccuracy() {
@@ -502,6 +895,14 @@
         return 1;
       }
 
+      function boostMult() { return state.boostActive ? BOOST_MULT : 1; }
+
+      function totalMultiplier() {
+        return comboMultiplier() * (state.feverActive ? 2 : 1) * boostMult();
+      }
+
+      // ==================== Julgamento ====================
+
       function registerHit(note, quality, delta) {
         note.hit = true;
         note.quality = quality;
@@ -511,8 +912,8 @@
           good: { factor: 0.5, perf: 0.35, fever: 2.8, label: 'GOOD' }
         };
         const info = values[quality];
-        const feverMult = state.feverActive ? 2 : 1;
-        const gained = 100 * info.factor * comboMultiplier() * feverMult;
+        if (note.type === 'boost') activateBoost(); // a própria nota já recebe o ×2
+        const gained = 100 * info.factor * totalMultiplier();
         state.score += gained;
         state.combo += 1;
         state.maxCombo = Math.max(state.maxCombo, state.combo);
@@ -527,14 +928,13 @@
         state.pulse = 1;
         state.activeKeyFlash.set(note.lane, 1);
         spawnHitParticles(note.lane, quality);
-        state.floatingTexts.push({ text: `+${Math.round(gained)}`, lane: note.lane, born: nowSec(), life: 0.75, quality });
+        state.floatingTexts.push({ text: `+${Math.round(gained)}`, lane: note.lane, born: nowSec(), life: 0.75, quality: note.type === 'boost' ? 'boost' : quality });
         playHitSound(note.lane, quality);
       }
 
       function registerMiss(note, reason = 'MISS') {
         if (note && !note.hit && !note.missed) note.missed = true;
         state.combo = 0;
-        state.accuracyPoints += 0;
         state.judgedNotes += 1;
         state.counts.miss += 1;
         state.performance = clamp(state.performance - 7.5, 0, 100);
@@ -549,10 +949,13 @@
 
       function pressLane(lane) {
         if (state.screen !== 'playing') return;
+        if (state.activeHolds.has(lane)) return; // re-press durante hold ativo: sem penalidade
         const t = currentSongTime();
         let best = null;
         let bestAbs = Infinity;
-        for (const note of state.chart) {
+        for (let i = state.chartCursor; i < state.chart.length; i++) {
+          const note = state.chart[i];
+          if (note.time > t + WINDOWS.miss) break;
           if (note.lane !== lane || note.hit || note.missed) continue;
           const delta = t - note.time;
           const abs = Math.abs(delta);
@@ -560,7 +963,6 @@
             best = note;
             bestAbs = abs;
           }
-          if (note.time > t + WINDOWS.miss) break;
         }
 
         if (!best || bestAbs > WINDOWS.good) {
@@ -579,7 +981,96 @@
         let quality = 'good';
         if (bestAbs <= WINDOWS.perfect) quality = 'perfect';
         else if (bestAbs <= WINDOWS.great) quality = 'great';
-        registerHit(best, quality, delta);
+
+        if (best.type === 'hold') startHold(best, quality, delta, t);
+        else registerHit(best, quality, delta);
+      }
+
+      function startHold(note, quality, delta, t) {
+        registerHit(note, quality, delta);
+        note.holdState = 'active';
+        const tick = HOLD_TICK_BEATS * getBeatSec();
+        // Agenda ticks na grade da própria nota, pulando os que já passaram (sem rajada grátis)
+        note.nextTickAt = note.time + tick * (Math.floor(Math.max(0, t - note.time) / tick) + 1);
+        state.activeHolds.set(note.lane, note);
+      }
+
+      function awardHoldTick(note) {
+        const gained = HOLD_TICK_BASE * totalMultiplier();
+        state.score += gained;
+        note.ticksAwarded += 1;
+        if (!state.feverActive) state.fever = clamp(state.fever + 0.6, 0, 100);
+        spawnHoldTickParticles(note.lane);
+        if (note.ticksAwarded % 2 === 0) {
+          const scale = [261.63, 293.66, 329.63, 349.23];
+          playTone(scale[note.lane % scale.length] * 2, 0.05, 0.05, 'sine');
+        }
+      }
+
+      function completeHold(note) {
+        note.holdState = 'completed';
+        state.activeHolds.delete(note.lane);
+        const bonus = HOLD_COMPLETE_BASE * totalMultiplier();
+        state.score += bonus;
+        state.combo += 1;
+        state.maxCombo = Math.max(state.maxCombo, state.combo);
+        state.performance = clamp(state.performance + 1.5, 0, 100);
+        if (!state.feverActive) state.fever = clamp(state.fever + 4, 0, 100);
+        state.feedback = 'HOLD!';
+        state.feedbackSub = 'SUSTENTADO ATÉ O FIM';
+        state.feedbackAt = nowSec();
+        state.pulse = Math.max(state.pulse, 0.8);
+        state.floatingTexts.push({ text: `+${Math.round(bonus)} SEGUROU!`, lane: note.lane, born: nowSec(), life: 0.85, quality: 'hold' });
+        spawnHitParticles(note.lane, 'perfect');
+        playTone(659.25, 0.2, 0.12, 'triangle');
+        playTone(1318.5, 0.26, 0.07, 'sine');
+      }
+
+      function breakHold(note) {
+        note.holdState = 'broken';
+        state.activeHolds.delete(note.lane);
+        state.combo = 0;
+        state.performance = clamp(state.performance - 4, 0, 100);
+        if (!state.feverActive) state.fever = clamp(state.fever - 6, 0, 100);
+        state.feedback = 'QUEBROU';
+        state.feedbackSub = 'SOLTOU CEDO';
+        state.feedbackAt = nowSec();
+        state.shake = 0.5;
+        playMissSound();
+        if (state.performance <= 0) endGame(true);
+      }
+
+      function releaseLane(lane) {
+        if (state.screen !== 'playing') return;
+        const note = state.activeHolds.get(lane);
+        if (!note) return;
+        const t = currentSongTime();
+        if (t >= note.endTime - HOLD_RELEASE_TOL) completeHold(note);
+        else breakHold(note);
+      }
+
+      function finalizeActiveHolds() {
+        for (const note of Array.from(state.activeHolds.values())) {
+          completeHold(note); // o jogador segurou até o fim da música
+        }
+      }
+
+      function updateHolds(t) {
+        for (const [lane, note] of Array.from(state.activeHolds.entries())) {
+          const key = currentSong().keys[lane];
+          const stillDown = state.keysDown.has(key);
+          if (!stillDown && nowSec() > state.holdGraceUntil) {
+            // Poll de segurança (keyup é o gatilho primário; cobre blur/casos perdidos)
+            if (t >= note.endTime - HOLD_RELEASE_TOL) completeHold(note);
+            else breakHold(note);
+            continue;
+          }
+          while (note.nextTickAt <= t && note.nextTickAt <= note.endTime) {
+            awardHoldTick(note);
+            note.nextTickAt += HOLD_TICK_BEATS * getBeatSec();
+          }
+          if (t >= note.endTime) completeHold(note);
+        }
       }
 
       function activateFever() {
@@ -596,11 +1087,24 @@
         playTone(783.99, 0.38, 0.1, 'sine');
       }
 
+      function activateBoost() {
+        state.boostActive = true;
+        state.boostEndsAt = currentSongTime() + BOOST_DURATION; // re-hit renova, não empilha
+        state.feedback = 'BOOST';
+        state.feedbackSub = `MULTIPLICADOR ×2 · ${BOOST_DURATION}s`;
+        state.feedbackAt = nowSec();
+        state.pulse = 1.2;
+        for (let i = 0; i < 24; i++) spawnBoostParticle();
+        playTone(659.25, 0.22, 0.16, 'square');
+        playTone(1318.5, 0.3, 0.09, 'sine');
+      }
+
       function spawnHitParticles(lane, quality) {
         const colors = quality === 'perfect' ? ['#ffffff', '#ffd76a', '#75e6ff'] : quality === 'great' ? ['#d8a9ff', '#ffffff'] : ['#ffd78f'];
         const geo = trackGeometry();
         const x = laneCenterAt(lane, 1, geo);
         for (let i = 0; i < (quality === 'perfect' ? 16 : 10); i++) {
+          if (state.particles.length >= PARTICLE_CAP) return;
           state.particles.push({
             x,
             y: geo.targetY,
@@ -616,7 +1120,29 @@
         }
       }
 
+      function spawnHoldTickParticles(lane) {
+        const geo = trackGeometry();
+        const palette = lanePalette[lane % lanePalette.length];
+        const x = laneCenterAt(lane, 1, geo);
+        for (let i = 0; i < 3; i++) {
+          if (state.particles.length >= PARTICLE_CAP) return;
+          state.particles.push({
+            x: x + (Math.random() - 0.5) * 26,
+            y: geo.targetY,
+            vx: (Math.random() - 0.5) * 90,
+            vy: -60 - Math.random() * 130,
+            gravity: 220,
+            size: 1.5 + Math.random() * 3,
+            born: nowSec(),
+            life: 0.3 + Math.random() * 0.3,
+            color: Math.random() < 0.5 ? palette.light : '#ffffff',
+            alpha: 0.9
+          });
+        }
+      }
+
       function spawnFeverParticle() {
+        if (state.particles.length >= PARTICLE_CAP) return;
         state.particles.push({
           x: 430 + Math.random() * 800,
           y: 780 + Math.random() * 100,
@@ -630,6 +1156,24 @@
           alpha: 0.8
         });
       }
+
+      function spawnBoostParticle() {
+        if (state.particles.length >= PARTICLE_CAP) return;
+        state.particles.push({
+          x: 430 + Math.random() * 800,
+          y: 780 + Math.random() * 100,
+          vx: (Math.random() - 0.5) * 70,
+          vy: -150 - Math.random() * 320,
+          gravity: -10,
+          size: 2 + Math.random() * 4,
+          born: nowSec(),
+          life: 0.8 + Math.random() * 1.2,
+          color: Math.random() < 0.5 ? '#8ff7ff' : '#0090ff',
+          alpha: 0.8
+        });
+      }
+
+      // ==================== Update ====================
 
       function update(dt) {
         state.pulse = Math.max(0, state.pulse - dt * 3.7);
@@ -646,9 +1190,14 @@
 
         if (state.screen === 'countdown') {
           const remaining = -currentSongTime();
-          state.countdown = Math.ceil(remaining);
+          const value = Math.ceil(remaining);
+          if (value !== state.countdown) {
+            state.countdown = value;
+            if (value > 0) playBeatSound(true);
+          }
           if (remaining <= 0) {
             state.screen = 'playing';
+            yt.play();
             srStatus.textContent = 'Valendo.';
           }
           return;
@@ -656,11 +1205,20 @@
 
         if (state.screen !== 'playing') return;
 
+        clockUpdate();
         const t = currentSongTime();
-        const beatIndex = Math.floor(Math.max(0, t) / BEAT);
-        if (beatIndex !== state.lastBeat) {
-          state.lastBeat = beatIndex;
-          playBeatSound(beatIndex % 4 === 0);
+
+        // UX de buffering / bloqueio de autoplay
+        if (state.awaitingAudio) {
+          showToast('Clique na tela para liberar o áudio', 600);
+        } else if (clock.frozen && now - clock.frozenAtPerf > 0.4) {
+          showToast('CARREGANDO ÁUDIO…', 600);
+        }
+        if (!clock.anchored && !clock.frozen && t > 1.5) {
+          clock.frozenValue = 0;
+          clock.frozen = true;
+          clock.frozenAtPerf = now;
+          state.awaitingAudio = true;
         }
 
         if (state.feverActive) {
@@ -674,23 +1232,43 @@
           }
         }
 
-        for (const note of state.chart) {
-          if (!note.hit && !note.missed && t - note.time > WINDOWS.miss) registerMiss(note);
+        if (state.boostActive) {
+          if (t >= state.boostEndsAt) state.boostActive = false;
+          else if (Math.random() < dt * 6) spawnBoostParticle();
         }
 
-        if (t >= SONG_DURATION) endGame(false);
+        updateHolds(t);
+
+        // Varredura de miss a partir do cursor (O(visível), não O(n))
+        for (let i = state.chartCursor; i < state.chart.length; i++) {
+          const note = state.chart[i];
+          if (note.time > t - WINDOWS.miss) break;
+          if (!note.hit && !note.missed) {
+            registerMiss(note);
+            if (note.type === 'hold') note.holdState = 'missed';
+          }
+        }
+        while (state.chartCursor < state.chart.length) {
+          const n = state.chart[state.chartCursor];
+          if ((n.hit || n.missed) && t > n.endTime + 1) state.chartCursor++;
+          else break;
+        }
+
+        if (t >= songLength(currentSong())) endGame(false);
       }
 
+      // ==================== Geometria ====================
+
       function trackGeometry() {
-        const mode = MODES[state.modeIndex];
+        const keys = currentSong().keys;
         return {
           x: 505,
           topY: 180,
           bottomY: 720,
           targetY: 665,
-          topW: mode.keys.length === 4 ? 320 : 395,
-          bottomW: mode.keys.length === 4 ? 700 : 790,
-          lanes: mode.keys.length
+          topW: keys.length === 4 ? 320 : 395,
+          bottomW: keys.length === 4 ? 700 : 790,
+          lanes: keys.length
         };
       }
 
@@ -704,7 +1282,13 @@
         return bounds.left + bounds.width * ((lane + 0.5) / geo.lanes);
       }
 
+      // ==================== Draw ====================
+
+      const uiButtons = [];
+      function uiButton(id, x, y, w, h) { uiButtons.push({ id, x, y, w, h }); }
+
       function draw() {
+        uiButtons.length = 0;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = '#080909';
         ctx.fillRect(0, 0, state.viewW, state.viewH);
@@ -717,14 +1301,18 @@
 
         drawStageBackground();
 
-        if (state.screen === 'menu') drawMenu();
-        else {
+        if (state.screen === 'title') {
+          drawTitle();
+        } else if (state.screen === 'songSelect') {
+          drawSongSelect();
+        } else {
           drawGameScene();
           if (state.screen === 'paused') drawPauseOverlay();
           if (state.screen === 'result') drawResultOverlay();
           if (state.screen === 'countdown') drawCountdown();
         }
 
+        drawToast();
         ctx.restore();
         endScene();
       }
@@ -746,7 +1334,7 @@
         ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
 
         drawSpotlight(565, 65, 430, 760, 'rgba(255,215,154,.13)');
-        drawSpotlight(1050, 65, 1150, 760, state.feverActive ? 'rgba(196,122,255,.18)' : 'rgba(255,215,154,.12)');
+        drawSpotlight(1050, 65, 1150, 760, state.feverActive ? 'rgba(196,122,255,.18)' : state.boostActive ? 'rgba(0,190,255,.16)' : 'rgba(255,215,154,.12)');
         drawSpotlight(800, 50, 760, 690, 'rgba(255,241,200,.10)');
 
         // Industrial stage silhouettes
@@ -906,55 +1494,234 @@
         ctx.restore();
       }
 
-      function drawMenu() {
-        drawLogo(800, 92, 1.05);
+      // ---------- Tela de título (estilo Rock Band) ----------
 
-        ctx.fillStyle = 'rgba(8,10,11,.78)';
-        fillRoundRect(445, 280, 710, 430, 24, 'rgba(9,12,13,.86)');
-        strokeRoundRect(445, 280, 710, 430, 24, 'rgba(255,255,255,.14)', 2);
+      function drawTitle() {
+        const pulse = 0.5 + 0.5 * Math.sin(nowSec() * 2.4);
+
+        // Glow dourado pulsante atrás do logo
+        const glow = ctx.createRadialGradient(800, 300, 60, 800, 300, 430);
+        glow.addColorStop(0, `rgba(242,173,59,${0.08 + 0.07 * pulse})`);
+        glow.addColorStop(1, 'rgba(242,173,59,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
+
+        drawLogo(800, 190, 1.7);
 
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#f4f0e8';
-        ctx.font = '900 30px Arial Black, sans-serif';
-        ctx.fillText('ESCOLHA SUA DIFICULDADE', 800, 330);
-        ctx.fillStyle = 'rgba(255,255,255,.62)';
-        ctx.font = '600 16px Arial, sans-serif';
-        ctx.fillText('Notas caem no ritmo. Pressione a tecla ao cruzar a linha de execução.', 800, 363);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = 'rgba(255,255,255,.6)';
+        ctx.font = '800 19px Arial, sans-serif';
+        ctx.fillText('UM TRIBUTO AO RITMO', 800, 470);
 
-        const cardY = 402;
-        const cardW = 275;
-        const cardH = 142;
-        MODES.forEach((mode, i) => {
-          const x = i === 0 ? 492 : 833;
-          const selected = state.modeIndex === i;
-          const hover = state.hoverTarget === `mode-${i}`;
-          fillRoundRect(x, cardY, cardW, cardH, 18, selected ? 'rgba(236,169,57,.17)' : hover ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.035)');
-          strokeRoundRect(x, cardY, cardW, cardH, 18, selected ? '#f1ad3b' : 'rgba(255,255,255,.13)', selected ? 3 : 1.5);
-          ctx.textAlign = 'left';
-          ctx.fillStyle = selected ? '#f6b64a' : '#f2f0ea';
-          ctx.font = '900 34px Arial Black, sans-serif';
-          ctx.fillText(mode.name, x + 26, cardY + 47);
-          ctx.fillStyle = selected ? '#fff0c9' : 'rgba(255,255,255,.66)';
-          ctx.font = '800 16px Arial, sans-serif';
-          ctx.fillText(mode.subtitle, x + 28, cardY + 76);
-          ctx.fillStyle = 'rgba(255,255,255,.5)';
-          ctx.font = '600 14px Arial, sans-serif';
-          ctx.fillText(mode.label, x + 28, cardY + 108);
-          ctx.fillStyle = selected ? '#f1ad3b' : 'rgba(255,255,255,.22)';
-          ctx.beginPath(); ctx.arc(x + cardW - 33, cardY + 34, 9, 0, TWO_PI); ctx.fill();
-        });
+        uiButton('title-start', 540, 600, 520, 74);
+        if (state.hoverTarget === 'title-start') strokeRoundRect(540, 600, 520, 74, 16, '#f1ad3b', 2);
+        ctx.save();
+        ctx.shadowColor = '#f2ad3b';
+        ctx.shadowBlur = 16 * pulse;
+        ctx.fillStyle = `rgba(242,173,59,${0.45 + 0.55 * pulse})`;
+        ctx.font = '900 38px Arial Black, sans-serif';
+        ctx.fillText('PRESSIONE ENTER', 800, 645);
+        ctx.restore();
 
-        const playHover = state.hoverTarget === 'play';
-        fillRoundRect(560, 580, 480, 78, 16, playHover ? '#ffc45b' : '#efa83a');
-        ctx.fillStyle = '#181713';
-        ctx.textAlign = 'center';
-        ctx.font = '900 28px Arial Black, sans-serif';
-        ctx.fillText('INICIAR APRESENTAÇÃO', 800, 630);
+        if (location.protocol === 'file:') {
+          ctx.fillStyle = '#e45460';
+          ctx.font = '700 14px Arial, sans-serif';
+          ctx.fillText('Sirva o jogo via http(s) para ouvir as músicas do YouTube', 800, 795);
+        }
 
         ctx.fillStyle = 'rgba(255,255,255,.52)';
         ctx.font = '600 14px Arial, sans-serif';
-        ctx.fillText('ENTER para jogar  •  SETAS para alternar  •  P para pausar', 800, 689);
+        ctx.fillText('ENTER para começar  •  MÚSICA via YouTube  •  ⛶ tela cheia', 800, 830);
       }
+
+      // ---------- Seleção de música (estilo Guitar Hero) ----------
+
+      function drawCover(x, y, w, h, style, songId) {
+        const g = ctx.createLinearGradient(x, y, x + w, y + h);
+        g.addColorStop(0, style.bg1);
+        g.addColorStop(1, style.bg2);
+        fillRoundRect(x, y, w, h, 6, g);
+        ctx.save();
+        roundRectPath(ctx, x, y, w, h, 6);
+        ctx.clip();
+        const seed = seededRandom(songId === 'moonlight' ? 777001 : 424242);
+        if (style.motif === 'moon') {
+          ctx.fillStyle = style.accent;
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath(); ctx.arc(x + w * 0.68, y + h * 0.32, w * 0.2, 0, TWO_PI); ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = style.bg1;
+          ctx.beginPath(); ctx.arc(x + w * 0.61, y + h * 0.28, w * 0.17, 0, TWO_PI); ctx.fill();
+          ctx.fillStyle = style.accent;
+          for (let i = 0; i < 14; i++) {
+            ctx.globalAlpha = 0.35 + seed() * 0.6;
+            ctx.beginPath(); ctx.arc(x + seed() * w, y + seed() * h * 0.72, 0.8 + seed() * 1.6, 0, TWO_PI); ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          const keys = 7;
+          for (let i = 0; i < keys; i++) {
+            ctx.fillStyle = '#f2eee5';
+            ctx.fillRect(x + (w / keys) * i + 1, y + h * 0.82, w / keys - 2, h * 0.18);
+          }
+          ctx.fillStyle = '#0b0d10';
+          for (let i = 0; i < keys - 1; i++) {
+            if (i === 2 || i === 6) continue;
+            ctx.fillRect(x + (w / keys) * (i + 0.72), y + h * 0.82, (w / keys) * 0.55, h * 0.1);
+          }
+        } else {
+          const cx = x + w / 2;
+          const cy = y + h * 0.58;
+          ctx.strokeStyle = style.accent;
+          ctx.globalAlpha = 0.5;
+          ctx.lineWidth = Math.max(3, w * 0.045);
+          for (let i = 0; i < 12; i++) {
+            const a = (i / 12) * TWO_PI;
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(a) * w * 0.18, cy + Math.sin(a) * w * 0.18);
+            ctx.lineTo(cx + Math.cos(a) * w * 0.85, cy + Math.sin(a) * w * 0.85);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#0b0b0d';
+          ctx.beginPath(); ctx.arc(cx, cy, w * 0.22, 0, TWO_PI); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx - w * 0.19, cy - w * 0.19, w * 0.13, 0, TWO_PI); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx + w * 0.19, cy - w * 0.19, w * 0.13, 0, TWO_PI); ctx.fill();
+        }
+        ctx.restore();
+        strokeRoundRect(x, y, w, h, 6, 'rgba(255,255,255,.25)', 2);
+      }
+
+      function drawDifficultyDots(x, y, level, spacing = 20, r = 6) {
+        for (let d = 0; d < 5; d++) {
+          ctx.fillStyle = d < level ? '#f1ad3b' : 'rgba(255,255,255,.22)';
+          ctx.beginPath(); ctx.arc(x + d * spacing, y, r, 0, TWO_PI); ctx.fill();
+        }
+      }
+
+      function drawSongSelect() {
+        drawLogo(800, 26, 0.6);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = '#f4f0e8';
+        ctx.font = '900 34px Arial Black, sans-serif';
+        ctx.fillText('ESCOLHA SUA MÚSICA', 800, 172);
+        ctx.fillStyle = 'rgba(255,255,255,.62)';
+        ctx.font = '600 15px Arial, sans-serif';
+        ctx.fillText('A música toca direto do YouTube. As notas caem no ritmo do vídeo.', 800, 200);
+
+        // Painel da lista
+        fillRoundRect(110, 225, 800, 545, 24, 'rgba(9,12,13,.86)');
+        strokeRoundRect(110, 225, 800, 545, 24, 'rgba(255,255,255,.14)', 2);
+
+        SONGS.forEach((song, i) => {
+          const y = 260 + i * 150;
+          const selected = state.selectIndex === i;
+          const hover = state.hoverTarget === `song-${i}`;
+          const blocked = !!yt.blocked[song.id];
+          uiButton(`song-${i}`, 140, y, 740, 132);
+          fillRoundRect(140, y, 740, 132, 18, selected ? 'rgba(236,169,57,.17)' : hover ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.035)');
+          strokeRoundRect(140, y, 740, 132, 18, blocked ? 'rgba(228,84,96,.5)' : selected ? '#f1ad3b' : 'rgba(255,255,255,.13)', selected ? 3 : 1.5);
+
+          drawCover(156, y + 16, 100, 100, song.coverStyle, song.id);
+
+          ctx.textAlign = 'left';
+          ctx.fillStyle = selected ? '#f6b64a' : '#f2f0ea';
+          ctx.font = '900 30px Arial Black, sans-serif';
+          ctx.fillText(song.title, 280, y + 48);
+          ctx.fillStyle = selected ? '#fff0c9' : 'rgba(255,255,255,.66)';
+          ctx.font = '800 15px Arial, sans-serif';
+          ctx.fillText(`${song.subtitle}  ·  ${song.artist}`, 280, y + 76);
+
+          ctx.fillStyle = 'rgba(255,255,255,.5)';
+          ctx.font = '700 14px Arial, sans-serif';
+          ctx.fillText(formatTime(songLength(song)), 280, y + 110);
+          ctx.fillText(`${song.bpm} BPM`, 380, y + 110);
+          drawDifficultyDots(490, y + 105, song.difficulty, 20, 6);
+
+          if (blocked) {
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#e45460';
+            ctx.font = '900 15px Arial Black, sans-serif';
+            ctx.fillText('⚠ INDISPONÍVEL', 856, y + 66);
+          }
+        });
+
+        // Painel de prévia
+        fillRoundRect(940, 225, 550, 545, 24, 'rgba(9,12,13,.86)');
+        strokeRoundRect(940, 225, 550, 545, 24, 'rgba(255,255,255,.14)', 2);
+
+        const song = SONGS[state.selectIndex];
+        const blocked = !!yt.blocked[song.id];
+
+        drawCover(1090, 250, 250, 250, song.coverStyle, song.id);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f4f0e8';
+        ctx.font = '900 28px Arial Black, sans-serif';
+        ctx.fillText(song.title, 1215, 545);
+        ctx.fillStyle = 'rgba(255,255,255,.66)';
+        ctx.font = '800 15px Arial, sans-serif';
+        ctx.fillText(`${song.subtitle}  ·  ${song.artist}`, 1215, 574);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(255,255,255,.55)';
+        ctx.font = '800 12px Arial, sans-serif';
+        ctx.fillText('DURAÇÃO', 990, 608);
+        ctx.fillText('BPM', 1250, 608);
+        ctx.fillText('DIFICULDADE', 990, 662);
+        ctx.fillText('RECORDE', 1250, 662);
+        ctx.fillStyle = '#f4f0e8';
+        ctx.font = '900 24px Arial Black, sans-serif';
+        ctx.fillText(formatTime(songLength(song)), 990, 636);
+        ctx.fillText(String(song.bpm), 1250, 636);
+        drawDifficultyDots(1000, 684, song.difficulty, 22, 7);
+        ctx.fillStyle = '#f3ae3a';
+        ctx.fillText(formatScore(readHighScore(song.id)), 1250, 690);
+
+        const savedOffset = readCalib(song.id);
+        if (savedOffset !== 0) {
+          ctx.textAlign = 'center';
+          ctx.fillStyle = 'rgba(255,255,255,.45)';
+          ctx.font = '700 12px Arial, sans-serif';
+          ctx.fillText(`OFFSET SALVO: ${savedOffset > 0 ? '+' : ''}${savedOffset} ms`, 1215, 700);
+        }
+
+        // Botão tocar
+        uiButton('song-play', 990, 708, 450, 54);
+        const playHover = state.hoverTarget === 'song-play';
+        ctx.textAlign = 'center';
+        if (blocked) {
+          fillRoundRect(990, 708, 450, 54, 14, 'rgba(228,84,96,.15)');
+          strokeRoundRect(990, 708, 450, 54, 14, '#e45460', 2);
+          ctx.fillStyle = '#e45460';
+          ctx.font = '900 18px Arial Black, sans-serif';
+          ctx.fillText('VÍDEO INDISPONÍVEL', 1215, 742);
+        } else if (!yt.ready) {
+          fillRoundRect(990, 708, 450, 54, 14, 'rgba(239,168,58,.35)');
+          ctx.fillStyle = '#181713';
+          ctx.font = '900 18px Arial Black, sans-serif';
+          ctx.fillText('CARREGANDO ÁUDIO…', 1215, 742);
+        } else {
+          fillRoundRect(990, 708, 450, 54, 14, playHover ? '#ffc45b' : '#efa83a');
+          ctx.fillStyle = '#181713';
+          ctx.font = '900 20px Arial Black, sans-serif';
+          ctx.fillText('TOCAR  [ENTER]', 1215, 742);
+        }
+
+        if (blocked) {
+          ctx.fillStyle = '#e45460';
+          ctx.font = '700 13px Arial, sans-serif';
+          ctx.fillText('ESTE VÍDEO NÃO PERMITE REPRODUÇÃO INCORPORADA', 1215, 244);
+        }
+
+        ctx.fillStyle = 'rgba(255,255,255,.52)';
+        ctx.font = '600 14px Arial, sans-serif';
+        ctx.fillText('↑ ↓ ou W S para navegar  •  ENTER para tocar  •  ESC para voltar', 800, 845);
+      }
+
+      // ---------- Cena de jogo ----------
 
       function drawGameScene() {
         const geo = trackGeometry();
@@ -971,48 +1738,34 @@
       }
 
       function drawLeftPanel() {
-        const mode = MODES[state.modeIndex];
-        const t = clamp(currentSongTime(), 0, SONG_DURATION);
+        const song = currentSong();
+        const len = songLength(song);
+        const t = clamp(currentSongTime(), 0, len);
         fillRoundRect(45, 120, 350, 500, 6, 'rgba(10,13,14,.91)');
         ctx.fillStyle = '#f1eee7';
         ctx.fillRect(45, 120, 350, 175);
 
-        // Album cover
-        const cover = ctx.createLinearGradient(65, 140, 168, 270);
-        cover.addColorStop(0, '#17152b');
-        cover.addColorStop(.5, '#222a55');
-        cover.addColorStop(1, '#4a2357');
-        fillRoundRect(65, 142, 105, 125, 4, cover);
-        ctx.save();
-        ctx.translate(117, 205);
-        ctx.fillStyle = 'rgba(105,137,255,.55)';
-        ctx.beginPath(); ctx.arc(5, 10, 31, .3, 4.7); ctx.fill();
-        ctx.fillStyle = '#8f6cff';
-        for (let i = 0; i < 11; i++) {
-          ctx.beginPath();
-          const a = i / 11 * TWO_PI;
-          const r = 28 + (i % 3) * 9;
-          ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 3 + (i % 2), 0, TWO_PI);
-          ctx.fill();
-        }
-        ctx.restore();
+        drawCover(65, 142, 105, 125, song.coverStyle, song.id);
 
         ctx.fillStyle = '#111415';
         ctx.textAlign = 'left';
-        ctx.font = '900 26px Arial Black, sans-serif';
-        ctx.fillText('NOCTURNE', 190, 168);
-        ctx.fillText('OF THE RIFT', 190, 199);
+        ctx.textBaseline = 'alphabetic';
+        ctx.font = '900 24px Arial Black, sans-serif';
+        ctx.fillText(song.panelTitle[0], 190, 168);
+        ctx.fillText(song.panelTitle[1], 190, 197);
         ctx.fillStyle = '#765c4c';
         ctx.font = '800 15px Arial, sans-serif';
-        ctx.fillText('LUDOVICO EINAUDI', 190, 224);
+        ctx.fillText(song.artist, 190, 224);
 
-        fillRoundRect(190, 240, mode.id === 'hard' ? 77 : 94, 28, 4, mode.id === 'hard' ? '#7950a8' : '#2c8ab2');
-        ctx.fillStyle = '#fff';
         ctx.font = '900 13px Arial, sans-serif';
-        ctx.fillText(mode.id === 'hard' ? '◆ HARD' : '◆ NORMAL', 201, 259);
+        const gLabel = '◆ ' + song.genre;
+        const gw = ctx.measureText(gLabel).width + 22;
+        fillRoundRect(190, 240, gw, 28, 4, song.genreColor);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(gLabel, 201, 259);
         ctx.fillStyle = '#111415';
         ctx.font = '800 14px Arial, sans-serif';
-        ctx.fillText(`${formatTime(t)} / ${formatTime(SONG_DURATION)}`, 292, 259);
+        ctx.fillText(`${formatTime(t)} / ${formatTime(len)}`, 190 + gw + 12, 259);
 
         ctx.fillStyle = '#f2f0ea';
         ctx.font = '900 20px Arial Black, sans-serif';
@@ -1033,6 +1786,22 @@
         ctx.fillStyle = '#f2f0ea';
         ctx.font = '800 15px Arial, sans-serif';
         ctx.fillText(`MELHOR ${state.maxCombo}`, 68, 560);
+
+        // Chip do multiplicador (dourado; azul quando o boost está ativo)
+        const boostOn = state.boostActive;
+        fillRoundRect(247, 470, 118, 58, 10, boostOn ? 'rgba(0,180,255,.14)' : 'rgba(255,255,255,.05)');
+        strokeRoundRect(247, 470, 118, 58, 10, boostOn ? '#00eaff' : 'rgba(255,255,255,.16)', boostOn ? 2 : 1.5);
+        ctx.fillStyle = boostOn ? 'rgba(143,247,255,.8)' : 'rgba(255,255,255,.55)';
+        ctx.font = '800 12px Arial, sans-serif';
+        ctx.fillText(boostOn ? 'MULTI · BOOST' : 'MULTI', 259, 489);
+        ctx.fillStyle = boostOn ? '#8ff7ff' : '#f3ae3a';
+        ctx.font = '900 26px Arial Black, sans-serif';
+        ctx.fillText(`×${fmtMult(totalMultiplier())}`, 259, 518);
+        if (boostOn) {
+          const remain = clamp((state.boostEndsAt - currentSongTime()) / BOOST_DURATION, 0, 1);
+          fillRoundRect(247, 534, 118, 5, 3, 'rgba(255,255,255,.12)');
+          fillRoundRect(247, 534, 118 * remain, 5, 3, '#00eaff');
+        }
 
         ctx.fillStyle = 'rgba(255,255,255,.65)';
         ctx.font = '700 13px Arial, sans-serif';
@@ -1076,24 +1845,33 @@
         ctx.fillStyle = tg;
         ctx.fill();
 
-        // Border
-        ctx.strokeStyle = '#ece8df';
+        // Borda (azulada durante o boost)
+        ctx.strokeStyle = state.boostActive ? '#bfefff' : '#ece8df';
         ctx.lineWidth = 8;
         ctx.lineJoin = 'round';
         ctx.stroke();
 
-        // Perspective lane separators
+        // Separadores neon: glow falso em duas passadas (sem shadowBlur — barato)
         for (let i = 1; i < geo.lanes; i++) {
           const topX = top.left + top.width * (i / geo.lanes);
           const bottomX = bottom.left + bottom.width * (i / geo.lanes);
           const palette = lanePalette[Math.min(i - 1, lanePalette.length - 1)];
+
+          ctx.strokeStyle = palette.main;
+          ctx.globalAlpha = 0.18 * neonPulse();
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(topX, geo.topY + 18);
+          ctx.lineTo(bottomX, geo.bottomY - 28);
+          ctx.stroke();
+
           const g = ctx.createLinearGradient(topX, geo.topY, bottomX, geo.bottomY);
           g.addColorStop(0, 'rgba(255,255,255,.08)');
           g.addColorStop(.35, palette.main);
           g.addColorStop(1, palette.light);
           ctx.strokeStyle = g;
-          ctx.globalAlpha = state.feverActive ? 0.85 : 0.58;
-          ctx.lineWidth = 2.5;
+          ctx.globalAlpha = state.feverActive ? 0.9 : 0.75;
+          ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(topX, geo.topY + 18);
           ctx.lineTo(bottomX, geo.bottomY - 28);
@@ -1103,16 +1881,17 @@
 
         // Beat rails moving downward
         if (state.screen === 'playing' || state.screen === 'countdown' || state.screen === 'paused') {
+          const beat = songBeat(currentSong());
           const t = Math.max(0, currentSongTime());
           for (let i = -2; i < 10; i++) {
-            const beatTime = Math.floor(t / BEAT) * BEAT + i * BEAT;
+            const beatTime = Math.floor(t / beat) * beat + i * beat;
             const delta = beatTime - t;
             if (delta < 0 || delta > APPROACH_TIME) continue;
             const p = 1 - delta / APPROACH_TIME;
             const y = lerp(geo.topY, geo.targetY, easeInQuad(p));
             const b = trackBoundsAt(easeInQuad(p), geo);
             ctx.strokeStyle = `rgba(255,255,255,${0.025 + p * 0.06})`;
-            ctx.lineWidth = beatTime / BEAT % 4 === 0 ? 2 : 1;
+            ctx.lineWidth = Math.round(beatTime / beat) % 4 === 0 ? 2 : 1;
             ctx.beginPath(); ctx.moveTo(b.left + 4, y); ctx.lineTo(b.left + b.width - 4, y); ctx.stroke();
           }
         }
@@ -1121,39 +1900,149 @@
       function drawNotes(geo) {
         if (state.screen === 'result') return;
         const t = currentSongTime();
-        for (const note of state.chart) {
+        for (let i = state.chartCursor; i < state.chart.length; i++) {
+          const note = state.chart[i];
+          if (note.time - t > APPROACH_TIME) break;
+          if (note.type === 'hold') {
+            if (note.holdState === 'completed') continue;
+            if (note.endTime - t < -WINDOWS.miss) continue;
+            drawHoldNote(note, t, geo);
+            continue;
+          }
           if (note.hit || note.missed) continue;
           const delta = note.time - t;
-          if (delta > APPROACH_TIME || delta < -WINDOWS.miss) continue;
-          const progress = clamp(1 - delta / APPROACH_TIME, 0, 1.06);
-          const p = easeInQuad(clamp(progress, 0, 1));
+          if (delta < -WINDOWS.miss) continue;
+          const p = easeInQuad(clamp(1 - delta / APPROACH_TIME, 0, 1));
           const y = lerp(geo.topY + 25, geo.targetY, p);
           const center = laneCenterAt(note.lane, p, geo);
           const bounds = trackBoundsAt(p, geo);
-          const laneW = bounds.width / geo.lanes;
-          const w = laneW * 0.72;
+          const w = (bounds.width / geo.lanes) * 0.72;
           const h = lerp(35, 66, p);
-          drawNote(center - w / 2, y - h / 2, w, h, note.lane, p);
+          const isBoost = note.type === 'boost';
+          drawNote(center - w / 2, y - h / 2, w, h, note.lane, p, isBoost ? boostPalette : null, isBoost);
         }
       }
 
-      function drawNote(x, y, w, h, lane, p) {
-        const palette = lanePalette[lane % lanePalette.length];
+      // O rastro do hold é projetado ponto a ponto pelo MESMO pipeline das cabeças
+      // (easeInQuad + perspectiva) — um retângulo reto dessincronizaria da pista.
+      function drawHoldNote(note, t, geo) {
+        const active = note.holdState === 'active';
+        const dead = note.holdState === 'broken' || note.holdState === 'missed';
+        const palette = lanePalette[note.lane % lanePalette.length];
+        const from = Math.max(note.time, t);
+        const to = note.endTime;
+
+        if (to > from) {
+          const K = clamp(Math.ceil(((to - from) / APPROACH_TIME) * 12), 4, 16);
+          const pts = [];
+          for (let k = 0; k <= K; k++) {
+            const ts = from + ((to - from) * k) / K;
+            const prog = easeInQuad(clamp(1 - (ts - t) / APPROACH_TIME, 0, 1));
+            const bounds = trackBoundsAt(prog, geo);
+            pts.push({
+              x: laneCenterAt(note.lane, prog, geo),
+              y: lerp(geo.topY + 25, geo.targetY, prog),
+              w: (bounds.width / geo.lanes) * 0.72 * lerp(0.6, 0.35, k / K)
+            });
+          }
+
+          ctx.save();
+          if (dead) {
+            ctx.globalAlpha = 0.22;
+            ctx.fillStyle = '#6b6d72';
+          } else {
+            ctx.globalAlpha = active ? 0.95 : 0.7;
+            const g = ctx.createLinearGradient(0, pts[K].y, 0, pts[0].y);
+            g.addColorStop(0, palette.main);
+            g.addColorStop(1, palette.light);
+            ctx.fillStyle = g;
+            ctx.shadowColor = palette.glow;
+            ctx.shadowBlur = 14 * neonPulse();
+          }
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x - pts[0].w / 2, pts[0].y);
+          for (let k = 1; k <= K; k++) ctx.lineTo(pts[k].x - pts[k].w / 2, pts[k].y);
+          for (let k = K; k >= 0; k--) ctx.lineTo(pts[k].x + pts[k].w / 2, pts[k].y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          if (!dead) {
+            const tail = pts[K];
+            ctx.beginPath();
+            ctx.arc(tail.x, tail.y, Math.max(4, tail.w * 0.45), 0, TWO_PI);
+            ctx.fill();
+          }
+
+          if (active) {
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = 0.3 * neonPulse();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let k = 1; k <= K; k++) ctx.lineTo(pts[k].x, pts[k].y);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        if (note.holdState === 'waiting') {
+          const prog = easeInQuad(clamp(1 - (note.time - t) / APPROACH_TIME, 0, 1));
+          const y = lerp(geo.topY + 25, geo.targetY, prog);
+          const bounds = trackBoundsAt(prog, geo);
+          const w = (bounds.width / geo.lanes) * 0.72;
+          const h = lerp(35, 66, prog);
+          drawNote(laneCenterAt(note.lane, prog, geo) - w / 2, y - h / 2, w, h, note.lane, prog);
+        } else if (active) {
+          const bounds = trackBoundsAt(1, geo);
+          const w = (bounds.width / geo.lanes) * 0.72;
+          const h = 66;
+          const s = 1 + 0.05 * Math.sin(nowSec() * 12);
+          drawNote(laneCenterAt(note.lane, 1, geo) - (w * s) / 2, geo.targetY - (h * s) / 2, w * s, h * s, note.lane, 1);
+        }
+      }
+
+      function drawNote(x, y, w, h, lane, p, pal, isBoost) {
+        const palette = pal || lanePalette[lane % lanePalette.length];
+        const r = 7 + p * 4;
         ctx.save();
-        ctx.shadowColor = palette.main;
-        ctx.shadowBlur = state.feverActive ? 22 : 10;
-        fillRoundRect(x, y + 8, w, h, 7 + p * 4, palette.dark);
+        ctx.shadowColor = palette.glow || palette.main;
+        ctx.shadowBlur = lerp(8, 22, p) * neonPulse() + (state.feverActive ? 6 : 0) + (isBoost ? 6 : 0);
+        fillRoundRect(x, y + 8, w, h, r, palette.dark);
         const g = ctx.createLinearGradient(x, y, x, y + h);
         g.addColorStop(0, palette.light);
-        g.addColorStop(0.5, palette.main);
-        g.addColorStop(1, palette.dark);
-        fillRoundRect(x, y, w, h, 7 + p * 4, g);
-        strokeRoundRect(x, y, w, h, 7 + p * 4, 'rgba(255,255,255,.3)', 1.5);
-        ctx.fillStyle = '#fff';
+        g.addColorStop(0.28, palette.main);
+        g.addColorStop(1, palette.deep || palette.dark);
+        fillRoundRect(x, y, w, h, r, g);
+        ctx.shadowBlur = 0;
+        if (isBoost) {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = 0.25;
+          fillRoundRect(x - 4, y - 4, w + 8, h + 8, r + 3, palette.main);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        strokeRoundRect(x, y, w, h, r, 'rgba(255,255,255,.55)', 1.5);
+        if (isBoost) {
+          const cx = x + w / 2;
+          const dy = y + 9 + 2 * p;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.moveTo(cx, dy - 5); ctx.lineTo(cx + 4, dy); ctx.lineTo(cx, dy + 5); ctx.lineTo(cx - 4, dy);
+          ctx.closePath();
+          ctx.fill();
+        }
+        const label = currentSong().keys[lane];
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = `900 ${Math.round(18 + 18 * p)}px Arial Black, sans-serif`;
-        ctx.fillText(MODES[state.modeIndex].keys[lane], x + w / 2, y + h / 2 + 1);
+        ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(0,0,0,.55)';
+        ctx.strokeText(label, x + w / 2, y + h / 2 + 1);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(label, x + w / 2, y + h / 2 + 1);
         ctx.restore();
       }
 
@@ -1163,17 +2052,35 @@
         const gap = 10;
         const keyW = (bottom.width - gap * (geo.lanes - 1)) / geo.lanes;
         const keyH = 78;
+        const boostOnly = state.boostActive && !state.feverActive;
 
-        // Judgement line
+        // Linha de julgamento
         ctx.save();
-        ctx.shadowColor = state.feverActive ? '#ffd15a' : '#ffffff';
-        ctx.shadowBlur = 16 + state.pulse * 16;
-        ctx.strokeStyle = state.feverActive ? '#ffd65d' : '#f3eee5';
+        ctx.shadowColor = state.feverActive ? '#ffd15a' : boostOnly ? '#00eaff' : '#ffffff';
+        ctx.shadowBlur = (16 + state.pulse * 16) * neonPulse();
+        ctx.strokeStyle = state.feverActive ? '#ffd65d' : boostOnly ? '#8ff7ff' : '#f3eee5';
         ctx.lineWidth = 5;
         ctx.beginPath(); ctx.moveTo(bottom.left, geo.targetY); ctx.lineTo(bottom.left + bottom.width, geo.targetY); ctx.stroke();
+        if (state.boostActive && state.feverActive) {
+          ctx.shadowColor = '#00eaff';
+          ctx.strokeStyle = '#8ff7ff';
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(bottom.left, geo.targetY + 7); ctx.lineTo(bottom.left + bottom.width, geo.targetY + 7); ctx.stroke();
+        }
         ctx.restore();
 
-        MODES[state.modeIndex].keys.forEach((key, lane) => {
+        // Banda de halo aditiva na linha
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const band = ctx.createLinearGradient(0, geo.targetY - 13, 0, geo.targetY + 13);
+        band.addColorStop(0, 'rgba(255,255,255,0)');
+        band.addColorStop(0.5, 'rgba(255,255,255,.10)');
+        band.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = band;
+        ctx.fillRect(bottom.left, geo.targetY - 13, bottom.width, 26);
+        ctx.restore();
+
+        currentSong().keys.forEach((key, lane) => {
           const x = bottom.left + lane * (keyW + gap);
           const active = state.keysDown.has(key);
           const flash = state.activeKeyFlash.get(lane) || 0;
@@ -1181,17 +2088,26 @@
           const fill = active || flash > 0.25 ? palette.dark : '#14191a';
           ctx.save();
           if (active || flash > 0) {
-            ctx.shadowColor = palette.main;
-            ctx.shadowBlur = 20 * Math.max(flash, active ? 1 : 0);
+            ctx.shadowColor = palette.glow;
+            ctx.shadowBlur = 26 * Math.max(flash, active ? 1 : 0);
           }
           fillRoundRect(x, keyY, keyW, keyH, 7, fill);
-          strokeRoundRect(x, keyY, keyW, keyH, 7, active || flash > 0.2 ? palette.light : 'rgba(255,255,255,.18)', active ? 4 : 3);
+          if (active || flash > 0.2) {
+            strokeRoundRect(x, keyY, keyW, keyH, 7, palette.light, active ? 4 : 3);
+          } else {
+            ctx.globalAlpha = 0.45;
+            strokeRoundRect(x, keyY, keyW, keyH, 7, palette.main, 3);
+            ctx.globalAlpha = 1;
+          }
           ctx.fillStyle = active ? '#fff' : '#f4f0e8';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.font = '900 29px Arial Black, sans-serif';
           ctx.fillText(key, x + keyW / 2, keyY + keyH / 2 + 2);
-          ctx.fillStyle = palette.main;
+          // Barra indicadora com glow falso em duas passadas
+          ctx.globalAlpha = 0.3 * neonPulse();
+          fillRoundRect(x - 2, keyY + keyH + 10, keyW + 4, 9, 4, palette.main);
+          ctx.globalAlpha = 1;
           fillRoundRect(x, keyY + keyH + 12, keyW, 5, 3, palette.main);
           ctx.restore();
         });
@@ -1244,7 +2160,11 @@
           const x = laneCenterAt(f.lane, 1, geo);
           const y = geo.targetY - 42 - t * 70;
           ctx.globalAlpha = 1 - t;
-          ctx.fillStyle = f.quality === 'perfect' ? '#ffd65c' : f.quality === 'great' ? '#c995ff' : '#f3e1bc';
+          ctx.fillStyle = f.quality === 'perfect' ? '#ffd65c'
+            : f.quality === 'great' ? '#c995ff'
+            : f.quality === 'boost' ? '#8ff7ff'
+            : f.quality === 'hold' ? '#9df5ff'
+            : '#f3e1bc';
           ctx.font = '900 19px Arial Black, sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(f.text, x, y);
@@ -1262,7 +2182,13 @@
         ctx.translate(885, 615);
         ctx.scale(scale, scale);
         ctx.globalAlpha = 1 - Math.max(0, (t - 0.65) / 0.35);
-        const color = state.feedback === 'PERFECT' ? '#f2b23d' : state.feedback === 'GREAT' ? '#a568d2' : state.feedback === 'GOOD' ? '#f1e2bf' : state.feedback === 'FEVER' ? '#ffd65c' : '#e45460';
+        const color = state.feedback === 'PERFECT' ? '#f2b23d'
+          : state.feedback === 'GREAT' ? '#a568d2'
+          : state.feedback === 'GOOD' ? '#f1e2bf'
+          : state.feedback === 'FEVER' ? '#ffd65c'
+          : state.feedback === 'BOOST' ? '#33e0ff'
+          : state.feedback === 'HOLD!' ? '#9df5ff'
+          : '#e45460';
         ctx.fillStyle = color;
         ctx.textAlign = 'center';
         ctx.font = 'italic 900 29px Arial Black, sans-serif';
@@ -1274,12 +2200,12 @@
       }
 
       function drawSongProgress() {
-        const progress = clamp(currentSongTime() / SONG_DURATION, 0, 1);
+        const progress = clamp(currentSongTime() / songLength(currentSong()), 0, 1);
         const x = 505;
         const y = 159;
         const w = 760;
         fillRoundRect(x, y, w, 5, 3, 'rgba(255,255,255,.12)');
-        fillRoundRect(x, y, w * progress, 5, 3, state.feverActive ? '#d39aff' : '#f0ac3a');
+        fillRoundRect(x, y, w * progress, 5, 3, state.feverActive ? '#d39aff' : state.boostActive ? '#00eaff' : '#f0ac3a');
       }
 
       function drawCountdown() {
@@ -1305,22 +2231,33 @@
       function drawPauseOverlay() {
         ctx.fillStyle = 'rgba(4,6,7,.78)';
         ctx.fillRect(0, 0, DESIGN_W, DESIGN_H);
-        fillRoundRect(540, 275, 520, 330, 24, 'rgba(16,20,21,.96)');
-        strokeRoundRect(540, 275, 520, 330, 24, 'rgba(255,255,255,.16)', 2);
+        fillRoundRect(540, 275, 520, 360, 24, 'rgba(16,20,21,.96)');
+        strokeRoundRect(540, 275, 520, 360, 24, 'rgba(255,255,255,.16)', 2);
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = '#f4f1e9';
         ctx.font = '900 54px Arial Black, sans-serif';
         ctx.fillText('PAUSADO', 800, 360);
         ctx.fillStyle = 'rgba(255,255,255,.66)';
         ctx.font = '600 17px Arial, sans-serif';
         ctx.fillText('Respire. O palco espera por você.', 800, 400);
-        fillRoundRect(620, 455, 360, 68, 14, '#efa83a');
+
+        uiButton('resume', 620, 445, 360, 68);
+        fillRoundRect(620, 445, 360, 68, 14, state.hoverTarget === 'resume' ? '#ffc45b' : '#efa83a');
         ctx.fillStyle = '#171714';
         ctx.font = '900 22px Arial Black, sans-serif';
-        ctx.fillText('CONTINUAR  [P]', 800, 499);
+        ctx.fillText('CONTINUAR  [P]', 800, 489);
+
+        uiButton('pause-quit', 620, 528, 360, 46);
+        fillRoundRect(620, 528, 360, 46, 12, state.hoverTarget === 'pause-quit' ? 'rgba(236,169,57,.22)' : 'rgba(236,169,57,.1)');
+        strokeRoundRect(620, 528, 360, 46, 12, '#f1ad3b', 2);
+        ctx.fillStyle = '#f1ad3b';
+        ctx.font = '900 17px Arial Black, sans-serif';
+        ctx.fillText('SAIR PARA MÚSICAS  [Q]', 800, 558);
+
         ctx.fillStyle = 'rgba(255,255,255,.52)';
         ctx.font = '700 14px Arial, sans-serif';
-        ctx.fillText('R para reiniciar  •  ESC para continuar', 800, 560);
+        ctx.fillText('R para reiniciar  •  ESC para continuar  •  Q para sair', 800, 608);
       }
 
       function drawResultOverlay() {
@@ -1330,6 +2267,7 @@
         strokeRoundRect(395, 126, 810, 650, 28, state.resultWon ? 'rgba(243,174,58,.55)' : 'rgba(227,74,91,.5)', 3);
 
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = state.resultWon ? '#f2b13d' : '#e55763';
         ctx.font = '900 26px Arial Black, sans-serif';
         ctx.fillText(state.resultWon ? 'APRESENTAÇÃO CONCLUÍDA' : 'APRESENTAÇÃO ENCERRADA', 800, 187);
@@ -1338,7 +2276,7 @@
         ctx.fillText(state.resultRank, 800, 283);
         ctx.fillStyle = 'rgba(255,255,255,.62)';
         ctx.font = '800 15px Arial, sans-serif';
-        ctx.fillText(`META DO MODO: ${Math.round(MODES[state.modeIndex].minAccuracy * 100)}% DE PRECISÃO`, 800, 316);
+        ctx.fillText(`${currentSong().title}  ·  META: ${Math.round(currentSong().minAccuracy * 100)}% DE PRECISÃO`, 800, 316);
 
         const stats = [
           ['PONTUAÇÃO', formatScore(state.score)],
@@ -1376,57 +2314,127 @@
           ctx.fillText(String(j[1]), x, 618);
         });
 
-        const hover = state.hoverTarget === 'replay';
-        fillRoundRect(560, 660, 480, 76, 15, hover ? '#ffc45b' : '#efa83a');
+        uiButton('replay', 560, 650, 480, 76);
+        fillRoundRect(560, 650, 480, 76, 15, state.hoverTarget === 'replay' ? '#ffc45b' : '#efa83a');
         ctx.fillStyle = '#181713';
         ctx.font = '900 24px Arial Black, sans-serif';
-        ctx.fillText('JOGAR NOVAMENTE  [ENTER]', 800, 708);
+        ctx.fillText('JOGAR NOVAMENTE  [ENTER]', 800, 698);
+
+        uiButton('result-back', 600, 738, 400, 28);
+        ctx.fillStyle = state.hoverTarget === 'result-back' ? '#ffc45b' : '#f1ad3b';
+        ctx.font = '800 15px Arial, sans-serif';
+        ctx.fillText('ESCOLHER OUTRA MÚSICA  [ESC]', 800, 758);
       }
 
+      // ---------- Toast + calibração ----------
+
+      function showToast(text, ms = 2000) {
+        state.toast = { text, until: nowSec() + ms / 1000 };
+      }
+
+      function drawToast() {
+        if (!state.toast || nowSec() > state.toast.until) return;
+        ctx.save();
+        ctx.font = '800 16px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const w = ctx.measureText(state.toast.text).width + 48;
+        fillRoundRect(800 - w / 2, 96, w, 42, 12, 'rgba(9,12,13,.9)');
+        strokeRoundRect(800 - w / 2, 96, w, 42, 12, 'rgba(241,173,59,.6)', 1.5);
+        ctx.fillStyle = '#f2ad3b';
+        ctx.fillText(state.toast.text, 800, 117);
+        ctx.restore();
+      }
+
+      function nudgeCalib(deltaMs) {
+        state.calibMs += deltaMs;
+        saveCalib(currentSong().id, state.calibMs);
+        const s = v => (v > 0 ? '+' : '') + v;
+        showToast(`OFFSET DE ÁUDIO: ${s(deltaMs)} ms  (total: ${s(state.calibMs)} ms)`);
+      }
+
+      // ==================== Input ====================
+
       function getHitTarget(p) {
-        if (state.screen === 'menu') {
-          if (p.y >= 402 && p.y <= 544) {
-            if (p.x >= 492 && p.x <= 767) return 'mode-0';
-            if (p.x >= 833 && p.x <= 1108) return 'mode-1';
-          }
-          if (p.x >= 560 && p.x <= 1040 && p.y >= 580 && p.y <= 658) return 'play';
+        for (let i = uiButtons.length - 1; i >= 0; i--) {
+          const b = uiButtons[i];
+          if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return b.id;
         }
-        if (state.screen === 'result' && p.x >= 560 && p.x <= 1040 && p.y >= 660 && p.y <= 736) return 'replay';
-        if (state.screen === 'paused' && p.x >= 620 && p.x <= 980 && p.y >= 455 && p.y <= 523) return 'resume';
         return null;
       }
 
       function handleCanvasClick(target) {
         if (!target) return;
-        if (target === 'mode-0') state.modeIndex = 0;
-        else if (target === 'mode-1') state.modeIndex = 1;
-        else if (target === 'play' || target === 'replay') startGame();
+        if (target === 'title-start') {
+          setupAudio();
+          state.screen = 'songSelect';
+          srStatus.textContent = 'Seleção de músicas. Use as setas e Enter.';
+          return;
+        }
+        if (target.indexOf('song-') === 0 && target !== 'song-play') {
+          const i = Number(target.slice(5));
+          if (state.selectIndex === i) startSong(i);
+          else {
+            state.selectIndex = i;
+            srStatus.textContent = `${SONGS[i].title}, ${SONGS[i].artist}.`;
+          }
+          return;
+        }
+        if (target === 'song-play') startSong(state.selectIndex);
+        else if (target === 'replay') startSong(state.songIndex);
+        else if (target === 'result-back') toSongSelect();
         else if (target === 'resume') pauseGame();
+        else if (target === 'pause-quit') toSongSelect();
       }
 
       function handleKeyDown(e) {
         if (e.repeat) return;
         const key = e.key === ';' ? ';' : e.key.toUpperCase();
 
-        if (['ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Escape'].includes(e.key)) e.preventDefault();
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', ' ', 'Escape'].includes(e.key)) e.preventDefault();
 
-        if (state.screen === 'menu') {
-          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') state.modeIndex = state.modeIndex === 0 ? 1 : 0;
-          if (e.key === 'Enter') startGame();
+        if (state.screen === 'title') {
+          if (e.key === 'Enter' || e.code === 'Space') {
+            setupAudio();
+            state.screen = 'songSelect';
+            srStatus.textContent = 'Seleção de músicas. Use as setas e Enter.';
+          }
+          return;
+        }
+
+        if (state.screen === 'songSelect') {
+          if (e.key === 'ArrowUp' || key === 'W') {
+            state.selectIndex = Math.max(0, state.selectIndex - 1);
+            srStatus.textContent = `${SONGS[state.selectIndex].title}, ${SONGS[state.selectIndex].artist}.`;
+          }
+          if (e.key === 'ArrowDown' || key === 'S') {
+            state.selectIndex = Math.min(SONGS.length - 1, state.selectIndex + 1);
+            srStatus.textContent = `${SONGS[state.selectIndex].title}, ${SONGS[state.selectIndex].artist}.`;
+          }
+          if (e.key === 'Enter') startSong(state.selectIndex);
+          if (e.key === 'Escape') {
+            state.screen = 'title';
+            srStatus.textContent = 'Tela inicial.';
+          }
           return;
         }
 
         if (state.screen === 'result') {
-          if (e.key === 'Enter' || key === 'R') startGame();
-          if (e.key === 'Escape') state.screen = 'menu';
+          if (e.key === 'Enter' || key === 'R') startSong(state.songIndex);
+          if (e.key === 'Escape') toSongSelect();
           return;
         }
 
         if (state.screen === 'paused') {
           if (key === 'P' || e.key === 'Escape') pauseGame();
-          if (key === 'R') startGame();
+          if (key === 'R') startSong(state.songIndex);
+          if (key === 'Q') toSongSelect();
           return;
         }
+
+        // playing / countdown
+        if (e.key === ',') { nudgeCalib(-25); return; }
+        if (e.key === '.') { nudgeCalib(25); return; }
 
         if (key === 'P' || e.key === 'Escape') {
           pauseGame();
@@ -1434,7 +2442,7 @@
         }
 
         if (key === 'R') {
-          startGame();
+          startSong(state.songIndex);
           return;
         }
 
@@ -1443,8 +2451,7 @@
           return;
         }
 
-        const mode = MODES[state.modeIndex];
-        const lane = mode.keys.indexOf(key);
+        const lane = currentSong().keys.indexOf(key);
         if (lane >= 0) {
           state.keysDown.add(key);
           pressLane(lane);
@@ -1454,6 +2461,8 @@
       function handleKeyUp(e) {
         const key = e.key === ';' ? ';' : e.key.toUpperCase();
         state.keysDown.delete(key);
+        const lane = currentSong().keys.indexOf(key);
+        if (lane >= 0) releaseLane(lane);
       }
 
       function loop(ts) {
@@ -1486,6 +2495,7 @@
 
       canvas.addEventListener('click', e => {
         setupAudio();
+        if (state.awaitingAudio) yt.play();
         const p = toDesign(e.clientX, e.clientY);
         handleCanvasClick(getHitTarget(p));
         canvas.focus();
@@ -1508,6 +2518,7 @@
       });
 
       fitCanvas();
+      yt.init();
       requestAnimationFrame(loop);
     })();
   </script>

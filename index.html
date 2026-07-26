@@ -790,7 +790,7 @@
         const rect = canvas.getBoundingClientRect();
         canvas.width = Math.round(rect.width * dpr);
         canvas.height = Math.round(rect.height * dpr);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        state.dpr = dpr; // o draw() reaplica a cada frame — nunca desenhar sem o fator de DPI
         state.viewW = rect.width;
         state.viewH = rect.height;
         // A cena estica para preencher a viewport inteira (sem letterbox).
@@ -3155,7 +3155,9 @@
 
       function draw() {
         uiButtons.length = 0;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        // Base = escala de DPI (não identidade!): sem isso, em telas com escala do
+        // Windows/zoom o jogo renderiza menor ou cortado dentro do buffer do canvas.
+        ctx.setTransform(state.dpr || 1, 0, 0, state.dpr || 1, 0, 0);
         ctx.fillStyle = '#080909';
         ctx.fillRect(0, 0, state.viewW, state.viewH);
 
@@ -4782,6 +4784,7 @@
       }
 
       window.addEventListener('resize', fitCanvas);
+      document.addEventListener('fullscreenchange', fitCanvas);
       window.addEventListener('keydown', handleKeyDown, { passive: false });
       window.addEventListener('keyup', handleKeyUp);
       window.addEventListener('blur', () => {
